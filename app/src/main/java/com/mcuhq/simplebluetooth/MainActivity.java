@@ -51,8 +51,9 @@ public class MainActivity extends AppCompatActivity {
     private Handler mHandler; // Our main handler that will receive callback notifications
     private ConnectedThread mConnectedThread; // bluetooth background worker thread to send and receive data
     private BluetoothSocket mBTSocket = null; // bi-directional client-to-client data path
+    private static byte myUUID[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,(byte)0xAB,(byte)0xCD};
 
-    private static final UUID BTMODULEUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
+    private static final UUID BTMODULEUUID = UUID.nameUUIDFromBytes(myUUID);//fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
 
 
     // #defines for identifying shared types between calling functions
@@ -289,13 +290,25 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
+/*
         try {
             final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
             return (BluetoothSocket) m.invoke(device, BTMODULEUUID);
         } catch (Exception e) {
             Log.e(TAG, "Could not create Insecure RFComm Connection",e);
         }
-        return  device.createRfcommSocketToServiceRecord(BTMODULEUUID);
+*/
+
+        try {
+            final Method m = device.getClass().getMethod("createInsecureRfcommSocket", new Class[]{int.class});
+            return (BluetoothSocket) m.invoke(device, 1);
+        }
+        catch (Exception e) {
+            Log.e(TAG, "Could not create Insecure RFComm Connection", e);
+        }
+        return null;
+
+        //return device.createRfcommSocketToServiceRecord(BTMODULEUUID);
     }
 
     private class ConnectedThread extends Thread {
