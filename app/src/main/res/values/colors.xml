@@ -3,4 +3,10 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="Background">#2F2F2F</color>
+    <color name="SpeedBackground">#2F2F2F</color>
+    <color name="GaugeNormal">#0377f1</color>
+    <color name="White">#FFFFFF</color>
+    <color name="Gray">#6F6F6F</color>
+    <color name="Indicator">#e70f0f</color>
 </resources>

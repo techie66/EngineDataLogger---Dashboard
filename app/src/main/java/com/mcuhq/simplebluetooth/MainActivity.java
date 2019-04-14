@@ -1,21 +1,30 @@
 package com.mcuhq.simplebluetooth;
 
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
+import android.annotation.SuppressLint;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
+import android.support.annotation.RequiresApi;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
+import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -23,92 +32,137 @@ import android.widget.CheckBox;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.Manifest;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
-import java.util.Set;
-import java.util.UUID;
+import com.github.anastr.speedviewlib.DeluxeSpeedView;
+import com.github.anastr.speedviewlib.ImageSpeedometer;
+import com.github.anastr.speedviewlib.SpeedView;
+import com.github.anastr.speedviewlib.TubeSpeedometer;
 
 public class MainActivity extends AppCompatActivity {
 
     // GUI Components
     private TextView mBluetoothStatus;
-    private TextView mReadBuffer;
-    private Button mScanBtn;
-    private Button mOffBtn;
-    private Button mListPairedDevicesBtn;
-    private Button mDiscoverBtn;
-    private BluetoothAdapter mBTAdapter;
-    private Set<BluetoothDevice> mPairedDevices;
-    private ArrayAdapter<String> mBTArrayAdapter;
-    private ListView mDevicesListView;
+    //private Button mListPairedDevicesBtn;
+    //private ListView mDevicesListView;
     private CheckBox mLED1;
 
+    private DrawerLayout drawerLayout;
+
     private final String TAG = MainActivity.class.getSimpleName();
-    private Handler mHandler; // Our main handler that will receive callback notifications
-    private ConnectedThread mConnectedThread; // bluetooth background worker thread to send and receive data
-    private BluetoothSocket mBTSocket = null; // bi-directional client-to-client data path
-    private static byte myUUID[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,(byte)0xAB,(byte)0xCD};
 
-    private static final UUID BTMODULEUUID = UUID.nameUUIDFromBytes(myUUID);//fromString("00001101-0000-1000-8000-00805F9B34FB"); // "random" unique identifier
-
+    private MainActivityViewModel model;
+    private SharedPreferences sharedPrefs;
 
     // #defines for identifying shared types between calling functions
     private final static int REQUEST_ENABLE_BT = 1; // used to identify adding bluetooth names
-    private final static int MESSAGE_READ = 2; // used in bluetooth handler to identify message update
-    private final static int CONNECTING_STATUS = 3; // used in bluetooth handler to identify message status
 
+    /**
+     * Whether or not the system UI should be auto-hidden after
+     * {@link #AUTO_HIDE_DELAY_MILLIS} milliseconds.
+     */
+    private static final boolean AUTO_HIDE = true;
 
+    /**
+     * If {@link #AUTO_HIDE} is set, the number of milliseconds to wait after
+     * user interaction before hiding the system UI.
+     */
+    private static final int AUTO_HIDE_DELAY_MILLIS = 3000;
+
+    /**
+     * Some older devices needs a small delay between UI widget updates
+     * and a change of the status and navigation bar.
+     */
+    private static final int UI_ANIMATION_DELAY = 300;
+    private final Handler mHideHandler = new Handler();
+    private final Handler mBluetoothHandler = new Handler();
+    private View mContentView;
+    private final Runnable mHidePart2Runnable = new Runnable() {
+        @SuppressLint("InlinedApi")
+        @Override
+        public void run() {
+            // Delayed removal of status and navigation bar
+
+            // Note that some of these constants are new as of API 16 (Jelly Bean)
+            // and API 19 (KitKat). It is safe to use them, as they are inlined
+            // at compile-time and do nothing on earlier devices.
+            mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                    | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+    };
+    private View mControlsView;
+    private final Runnable mShowPart2Runnable = new Runnable() {
+        @Override
+        public void run() {
+            // Delayed display of UI elements
+            ActionBar actionBar = getSupportActionBar();
+            if (actionBar != null) {
+                actionBar.show();
+            }
+            mControlsView.setVisibility(View.VISIBLE);
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN
+                    | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        }
+    };
+    private boolean mVisible;
+    private final Runnable mHideRunnable = new Runnable() {
+        @Override
+        public void run() {
+            hide();
+        }
+    };
+    /**
+     * Touch listener to use for in-layout UI controls to delay hiding the
+     * system UI. This is to prevent the jarring behavior of controls going away
+     * while interacting with activity UI.
+     */
+    private final View.OnTouchListener mDelayHideTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            if (AUTO_HIDE) {
+                delayedHide(AUTO_HIDE_DELAY_MILLIS);
+            }
+            //Intent myIntent = new Intent(FullscreenActivity.this, MainActivity.class);
+            //startActivity(myIntent);
+            return false;
+        }
+    };
+    private final Runnable mConnectBluetooth = new Runnable() {
+        @Override
+        public void run() {
+            model.connectDevice(sharedPrefs.getString("bt_device",""));
+        }
+    };
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mBluetoothStatus = (TextView)findViewById(R.id.bluetoothStatus);
-        mReadBuffer = (TextView) findViewById(R.id.readBuffer);
-        mScanBtn = (Button)findViewById(R.id.scan);
-        mOffBtn = (Button)findViewById(R.id.off);
-        mDiscoverBtn = (Button)findViewById(R.id.discover);
-        mListPairedDevicesBtn = (Button)findViewById(R.id.PairedBtn);
+
         mLED1 = (CheckBox)findViewById(R.id.checkboxLED1);
 
-        mBTArrayAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1);
-        mBTAdapter = BluetoothAdapter.getDefaultAdapter(); // get a handle on the bluetooth radio
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
-        mDevicesListView = (ListView)findViewById(R.id.devicesListView);
-        mDevicesListView.setAdapter(mBTArrayAdapter); // assign model to view
-        mDevicesListView.setOnItemClickListener(mDeviceClickListener);
+        //mDevicesListView = (ListView)findViewById(R.id.devicesListView);
+        //mDevicesListView.setOnItemClickListener(mDeviceClickListener);
 
         // Ask for location permission if not already allowed
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
+        model = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
-        mHandler = new Handler(){
-            public void handleMessage(android.os.Message msg){
-                if(msg.what == MESSAGE_READ){
-                    String readMessage = null;
-                    try {
-                        readMessage = new String((byte[]) msg.obj, "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
-                        e.printStackTrace();
-                    }
-                    mReadBuffer.setText(readMessage);
-                }
-
-                if(msg.what == CONNECTING_STATUS){
-                    if(msg.arg1 == 1)
-                        mBluetoothStatus.setText("Connected to Device: " + (String)(msg.obj));
-                    else
-                        mBluetoothStatus.setText("Connection Failed");
-                }
-            }
-        };
-
-        if (mBTArrayAdapter == null) {
+        if (model.btAvailable() == false) {
             // Device does not support Bluetooth
             mBluetoothStatus.setText("Status: Bluetooth not found");
             Toast.makeText(getApplicationContext(),"Bluetooth device not found!",Toast.LENGTH_SHORT).show();
@@ -118,53 +172,112 @@ public class MainActivity extends AppCompatActivity {
             mLED1.setOnClickListener(new View.OnClickListener(){
                 @Override
                 public void onClick(View v){
-                    if(mConnectedThread != null) //First check to make sure thread created
-                        mConnectedThread.write("1");
+                    model.sendByte("1");
                 }
             });
+            // Spawn a new thread to keep Bluetooth active
+            new Thread() {
+                public void run() {
+                    boolean shownPreferences = false;
+                    while (true) {
+                        if(sharedPrefs.contains("bt_device")) {
+                            if (!model.isConnected()){
+                                mBluetoothHandler.removeCallbacks(mConnectBluetooth);
+                                mBluetoothHandler.post(mConnectBluetooth);
+                                SystemClock.sleep(2000);
+                            }
+                        }
+                        else {
+                            if(!shownPreferences) {
+                                shownPreferences = true;
+                                Intent intent = new Intent(MainActivity.this, PrefsActivity.class);
+                                startActivity(intent);
 
-
-            mScanBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    bluetoothOn(v);
+                            }
+                        }
+                    }
                 }
-            });
+            }.start();
 
-            mOffBtn.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v){
-                    bluetoothOff(v);
-                }
-            });
 
-            mListPairedDevicesBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v){
-                    listPairedDevices(v);
-                }
-            });
-
-            mDiscoverBtn.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v){
-                    discover(v);
-                }
-            });
         }
+
+        // Navigation Drawer Stuff
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        ActionBar actionbar = getSupportActionBar();
+        actionbar.setDisplayHomeAsUpEnabled(true);
+        actionbar.setHomeAsUpIndicator(R.drawable.ic_menu);
+
+        drawerLayout = findViewById(R.id.drawer_layout);
+
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(MenuItem menuItem) {
+                        // set item as selected to persist highlight
+                        menuItem.setChecked(true);
+                        // close drawer when item is tapped
+                        drawerLayout.closeDrawers();
+
+                        // Add code here to update the UI based on the item selected
+                        // For example, swap UI fragments here
+                        switch (menuItem.getItemId()) {
+                            case R.id.nav_settings:
+                                Intent intent = new Intent(MainActivity.this,PrefsActivity.class);
+                                startActivity(intent);
+                                break;
+                            case R.id.nav_fullscreen:
+                                toggle();
+                                break;
+                            default:
+                                break;
+                        }
+
+                        return true;
+                    }
+                });
+        navigationView.bringToFront();
+
+        mVisible = true;
+        mControlsView = findViewById(R.id.toolbar);
+        mContentView = findViewById(R.id.content_frame);
+
+        // Speedometer Stuff
+        TubeSpeedometer speedometer = findViewById(R.id.speedView);
+        ImageSpeedometer rpm = findViewById(R.id.rpmView);
+
+        // move to 50
+        speedometer.speedTo(135);
+        rpm.speedTo(9000);
+
+        // Updating from ViewModel
+        /*model.getPairedList().observe(this, pairedList -> {
+            // update UI
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
+                    android.R.layout.simple_list_item_1, android.R.id.text1, pairedList);
+            // Assign adapter to ListView
+            mDevicesListView.setAdapter(adapter);
+        });*/
+        model.getRPM().observe(this,myRPM -> {
+            //Update UI
+            rpm.speedTo(myRPM,100);
+        });
+        model.getStatus().observe(this,myStatus -> {
+            //Update UI
+            mBluetoothStatus.setText(myStatus.toString());
+        });
     }
 
-    private void bluetoothOn(View view){
-        if (!mBTAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            mBluetoothStatus.setText("Bluetooth enabled");
-            Toast.makeText(getApplicationContext(),"Bluetooth turned on",Toast.LENGTH_SHORT).show();
-
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                drawerLayout.openDrawer(GravityCompat.START);
+                return true;
         }
-        else{
-            Toast.makeText(getApplicationContext(),"Bluetooth is already on", Toast.LENGTH_SHORT).show();
-        }
+        return super.onOptionsItemSelected(item);
     }
 
     // Enter here after user selects "yes" or "no" to enabling radio
@@ -183,32 +296,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void bluetoothOff(View view){
-        mBTAdapter.disable(); // turn off
-        mBluetoothStatus.setText("Bluetooth disabled");
-        Toast.makeText(getApplicationContext(),"Bluetooth turned Off", Toast.LENGTH_SHORT).show();
-    }
-
-    private void discover(View view){
-        // Check if the device is already discovering
-        if(mBTAdapter.isDiscovering()){
-            mBTAdapter.cancelDiscovery();
-            Toast.makeText(getApplicationContext(),"Discovery stopped",Toast.LENGTH_SHORT).show();
-        }
-        else{
-            if(mBTAdapter.isEnabled()) {
-                mBTArrayAdapter.clear(); // clear items
-                mBTAdapter.startDiscovery();
-                Toast.makeText(getApplicationContext(), "Discovery started", Toast.LENGTH_SHORT).show();
-                registerReceiver(blReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
-            }
-            else{
-                Toast.makeText(getApplicationContext(), "Bluetooth not on", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    final BroadcastReceiver blReceiver = new BroadcastReceiver() {
+    /*final BroadcastReceiver blReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -219,156 +307,64 @@ public class MainActivity extends AppCompatActivity {
                 mBTArrayAdapter.notifyDataSetChanged();
             }
         }
-    };
-
-    private void listPairedDevices(View view){
-        mBTArrayAdapter.clear();
-        mPairedDevices = mBTAdapter.getBondedDevices();
-        if(mBTAdapter.isEnabled()) {
-            // put it's one to the adapter
-            for (BluetoothDevice device : mPairedDevices)
-                mBTArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-
-            Toast.makeText(getApplicationContext(), "Show Paired Devices", Toast.LENGTH_SHORT).show();
-        }
-        else
-            Toast.makeText(getApplicationContext(), "Bluetooth not on", Toast.LENGTH_SHORT).show();
-    }
+    };*/
 
     private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
-
-            if(!mBTAdapter.isEnabled()) {
-                Toast.makeText(getBaseContext(), "Bluetooth not on", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            mBluetoothStatus.setText("Connecting...");
-            // Get the device MAC address, which is the last 17 chars in the View
-            String info = ((TextView) v).getText().toString();
-            final String address = info.substring(info.length() - 17);
-            final String name = info.substring(0,info.length() - 17);
-
-            // Spawn a new thread to avoid blocking the GUI one
-            new Thread()
-            {
-                public void run() {
-                    boolean fail = false;
-
-                    BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
-
-                    try {
-                        mBTSocket = createBluetoothSocket(device);
-                    } catch (IOException e) {
-                        fail = true;
-                        Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_SHORT).show();
-                    }
-                    // Establish the Bluetooth socket connection.
-                    try {
-                        mBTSocket.connect();
-                    } catch (IOException e) {
-                        try {
-                            fail = true;
-                            mBTSocket.close();
-                            mHandler.obtainMessage(CONNECTING_STATUS, -1, -1)
-                                    .sendToTarget();
-                        } catch (IOException e2) {
-                            //insert code to deal with this
-                            Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                    if(fail == false) {
-                        mConnectedThread = new ConnectedThread(mBTSocket);
-                        mConnectedThread.start();
-
-                        mHandler.obtainMessage(CONNECTING_STATUS, 1, -1, name)
-                                .sendToTarget();
-                    }
-                }
-            }.start();
+            model.connectDevice(((TextView) v).getText().toString());
         }
     };
 
-    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
-/*
-        try {
-            final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
-            return (BluetoothSocket) m.invoke(device, BTMODULEUUID);
-        } catch (Exception e) {
-            Log.e(TAG, "Could not create Insecure RFComm Connection",e);
-        }
-*/
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
 
-        try {
-            final Method m = device.getClass().getMethod("createInsecureRfcommSocket", new Class[]{int.class});
-            return (BluetoothSocket) m.invoke(device, 1);
-        }
-        catch (Exception e) {
-            Log.e(TAG, "Could not create Insecure RFComm Connection", e);
-        }
-        return null;
-
-        //return device.createRfcommSocketToServiceRecord(BTMODULEUUID);
+        // Trigger the initial hide() shortly after the activity has been
+        // created, to briefly hint to the user that UI controls
+        // are available.
+        delayedHide(100);
     }
 
-    private class ConnectedThread extends Thread {
-        private final BluetoothSocket mmSocket;
-        private final InputStream mmInStream;
-        private final OutputStream mmOutStream;
-
-        public ConnectedThread(BluetoothSocket socket) {
-            mmSocket = socket;
-            InputStream tmpIn = null;
-            OutputStream tmpOut = null;
-
-            // Get the input and output streams, using temp objects because
-            // member streams are final
-            try {
-                tmpIn = socket.getInputStream();
-                tmpOut = socket.getOutputStream();
-            } catch (IOException e) { }
-
-            mmInStream = tmpIn;
-            mmOutStream = tmpOut;
+    private void toggle() {
+        if (mVisible) {
+            hide();
+        } else {
+            show();
         }
+    }
 
-        public void run() {
-            byte[] buffer = new byte[1024];  // buffer store for the stream
-            int bytes; // bytes returned from read()
-            // Keep listening to the InputStream until an exception occurs
-            while (true) {
-                try {
-                    // Read from the InputStream
-                    bytes = mmInStream.available();
-                    if(bytes != 0) {
-                        buffer = new byte[1024];
-                        SystemClock.sleep(100); //pause and wait for rest of data. Adjust this depending on your sending speed.
-                        bytes = mmInStream.available(); // how many bytes are ready to be read?
-                        bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
-                        mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
-                                .sendToTarget(); // Send the obtained bytes to the UI activity
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-
-                    break;
-                }
-            }
+    private void hide() {
+        // Hide UI first
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.hide();
         }
+        mControlsView.setVisibility(View.GONE);
+        mVisible = false;
 
-        /* Call this from the main activity to send data to the remote device */
-        public void write(String input) {
-            byte[] bytes = input.getBytes();           //converts entered String into bytes
-            try {
-                mmOutStream.write(bytes);
-            } catch (IOException e) { }
-        }
+        // Schedule a runnable to remove the status and navigation bar after a delay
+        mHideHandler.removeCallbacks(mShowPart2Runnable);
+        mHideHandler.postDelayed(mHidePart2Runnable, UI_ANIMATION_DELAY);
+    }
 
-        /* Call this from the main activity to shutdown the connection */
-        public void cancel() {
-            try {
-                mmSocket.close();
-            } catch (IOException e) { }
-        }
+    @SuppressLint("InlinedApi")
+    private void show() {
+        // Show the system bar
+        mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+        mVisible = true;
+
+        // Schedule a runnable to display UI elements after a delay
+        mHideHandler.removeCallbacks(mHidePart2Runnable);
+        mHideHandler.postDelayed(mShowPart2Runnable, UI_ANIMATION_DELAY);
+    }
+
+    /**
+     * Schedules a call to hide() in delay milliseconds, canceling any
+     * previously scheduled calls.
+     */
+    private void delayedHide(int delayMillis) {
+        mHideHandler.removeCallbacks(mHideRunnable);
+        mHideHandler.postDelayed(mHideRunnable, delayMillis);
     }
 }

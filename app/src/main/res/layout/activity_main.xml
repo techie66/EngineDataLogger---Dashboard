@@ -1,126 +1,140 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<!-- Use DrawerLayout as root container for activity -->
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.mcuhq.simplebluetooth.MainActivity">
+    android:fitsSystemWindows="true">
 
-
-    <LinearLayout
-        android:orientation="vertical"
+    <android.support.design.widget.NavigationView
+        android:id="@+id/nav_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:menu="@menu/drawer_view" />
+
+    <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/content_frame"
+        style="@android:style/Widget.DeviceDefault.Light.ScrollView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:clipToPadding="false"
+        android:fillViewport="true">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Toggle LED"
             android:id="@+id/checkboxLED1"
-            android:layout_marginTop="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
             android:checked="false"
-            android:layout_alignLeft="@+id/bluetoothStatus"
-            android:layout_alignStart="@+id/bluetoothStatus"
             android:scaleX="1.7"
             android:scaleY="1.7"
+            android:text="Toggle LED"
             android:textStyle="bold"
-            android:layout_gravity="center_horizontal" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar" />
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_marginTop="10dp"
-            android:layout_height="wrap_content">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.1"
-                android:text="RX:"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.9"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:text="&lt;Read Buffer>"
-                android:id="@+id/readBuffer"
-                android:layout_centerHorizontal="true" />
-        </LinearLayout>
 
-        <LinearLayout
-            android:orientation="horizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.1"
-                android:text="Status:"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textStyle="bold" />
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.9"
-
-                android:text="&lt;Bluetooth Status>"
-                android:id="@+id/bluetoothStatus"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:layout_centerHorizontal="true"
-                android:layout_alignTop="@+id/checkboxLED1" />
-        </LinearLayout>
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Bluetooth ON"
-            android:id="@+id/scan"
-            android:layout_centerVertical="true"
-            android:layout_toStartOf="@+id/off" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Bluetooth OFF"
-            android:id="@+id/off"
-            android:layout_alignBottom="@+id/scan"
-            android:layout_toEndOf="@+id/PairedBtn"
-            android:layout_toRightOf="@+id/PairedBtn" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Show paired Devices"
-            android:id="@+id/PairedBtn"
-            android:layout_below="@+id/scan"
-            android:layout_toStartOf="@+id/discover" />
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Discover New Devices"
-            android:id="@+id/discover"
-            android:layout_below="@+id/off"
-            android:layout_toRightOf="@+id/checkboxLED1"
-            android:layout_toEndOf="@+id/checkboxLED1" />
-
-        <ListView
+        <TextView
+            android:id="@+id/textView2"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/devicesListView"
-            android:choiceMode="singleChoice"
-            android:layout_below="@+id/PairedBtn"
-            android:layout_alignRight="@+id/off"
-            android:layout_alignEnd="@+id/off" />
+            android:layout_height="0dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="Status:"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/checkboxLED1" />
 
-    </LinearLayout>
+        <TextView
+            android:id="@+id/bluetoothStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="&lt;Bluetooth Status>"
+            app:layout_constraintStart_toEndOf="@+id/textView2"
+            app:layout_constraintTop_toTopOf="@+id/textView2" />
 
-</RelativeLayout>
+        <com.github.anastr.speedviewlib.TubeSpeedometer
+            android:id="@+id/speedView"
+
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/rpmView"
+            app:layout_constraintHorizontal_bias="0.5"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:sv_backgroundCircleColor="@color/SpeedBackground"
+            app:sv_lowSpeedColor="@color/GaugeNormal"
+            app:sv_lowSpeedPercent="80"
+            app:sv_maxSpeed="160"
+            app:sv_minSpeed="0"
+            app:sv_speedTextColor="@color/White"
+            app:sv_speedTextPosition="CENTER"
+            app:sv_speedTextSize="56dp"
+            app:sv_speedometerColor="@color/SpeedBackground"
+            app:sv_textColor="@color/White"
+            app:sv_textSize="16dp"
+            app:sv_tickNumber="9"
+            app:sv_tickPadding="15dp"
+            app:sv_unit="@string/units_speed"
+            app:sv_unitTextColor="@color/Gray"
+            app:sv_unitUnderSpeedText="true"
+            app:sv_withTremble="false" />
+
+        <com.github.anastr.speedviewlib.ImageSpeedometer
+            android:id="@+id/rpmView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toEndOf="@+id/speedView"
+            app:sv_endDegree="450"
+            app:sv_image="@drawable/rpm"
+            app:sv_indicator="HalfLineIndicator"
+            app:sv_indicatorColor="@color/Indicator"
+            app:sv_maxSpeed="12000"
+            app:sv_minSpeed="0"
+            app:sv_speedTextColor="@color/Indicator"
+            app:sv_speedTextSize="48dp"
+            app:sv_speedTextFormat="INTEGER"
+            app:sv_speedTextPosition="CENTER"
+            app:sv_startDegree="90"
+            app:sv_unitTextColor="@android:color/transparent"
+            app:sv_withTremble="false" />
+
+
+    </android.support.constraint.ConstraintLayout>
+</android.support.v4.widget.DrawerLayout>
+
