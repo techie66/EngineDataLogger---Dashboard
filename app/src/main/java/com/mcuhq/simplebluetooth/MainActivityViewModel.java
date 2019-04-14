@@ -26,6 +26,8 @@ import java.util.Set;
 
 import static android.os.SystemClock.elapsedRealtime;
 
+import EDL.AppBuffer.*;
+
 
 public class MainActivityViewModel extends ViewModel {
     private static final long BT_TIMEOUT = 2000;
@@ -121,7 +123,7 @@ public class MainActivityViewModel extends ViewModel {
                         //TODO Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_SHORT).show();
                     }
                 }
-                if(fail == false) {
+                if(!fail) {
                     mConnectedThread = new ConnectedThread(mBTSocket);
                     mConnectedThread.start();
 
@@ -138,17 +140,11 @@ public class MainActivityViewModel extends ViewModel {
     }
 
     boolean btAvailable() {
-        if (mBTAdapter == null)
-            return false;
-        else
-            return true;
+        return mBTAdapter != null;
     }
 
     public boolean isConnected() {
-        if (mBTSocket != null && mBTSocket.isConnected()) {
-            return true;
-        }
-        return false;
+        return mBTSocket != null && mBTSocket.isConnected();
     }
 
     private class ConnectedThread extends Thread {

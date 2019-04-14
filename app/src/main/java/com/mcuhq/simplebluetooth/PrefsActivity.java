@@ -16,7 +16,7 @@ public class PrefsActivity extends PreferenceActivity {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.prefs);
 
-        Preference clearall = (Preference) findPreference("clearall");
+        Preference clearall = findPreference("clearall");
 
         ListPreference BTList = (ListPreference) findPreference("bt_device");
         BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -38,13 +38,10 @@ public class PrefsActivity extends PreferenceActivity {
         BTList.setEntries(entries);
         BTList.setEntryValues(entryValues);
 
-        clearall.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-            @Override
-            public boolean onPreferenceClick(Preference preference) {
-                PreferenceManager.getDefaultSharedPreferences(PrefsActivity.this).edit().clear().apply();
-                finish();
-                return true;
-            }
+        clearall.setOnPreferenceClickListener(preference -> {
+            PreferenceManager.getDefaultSharedPreferences(PrefsActivity.this).edit().clear().apply();
+            PrefsActivity.this.finish();
+            return true;
         });
     }
 }
