@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MainActivityViewModel model;
     private SharedPreferences sharedPrefs;
+    private BTConnector_Thread mBTConnector;
 
     // #defines for identifying shared types between calling functions
     private final static int REQUEST_ENABLE_BT = 1; // used to identify adding bluetooth names
@@ -141,6 +142,34 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private final class BTConnector_Thread extends Thread {
+        private boolean running = true;
+        private boolean shownPreferences = false;
+        @Override
+        public void run() {
+            while (running) {
+                if (sharedPrefs.contains("bt_device")) {
+                    if (!model.isConnected()) {
+                        mBluetoothHandler.removeCallbacks(mConnectBluetooth);
+                        mBluetoothHandler.post(mConnectBluetooth);
+                        SystemClock.sleep(2000);
+                    }
+                } else {
+                    if (!shownPreferences) {
+                        shownPreferences = true;
+                        Intent intent = new Intent(MainActivity.this, PrefsActivity.class);
+                        startActivity(intent);
+
+                    }
+                }
+            }
+        }
+
+        public void cancel() {
+            running = false;
+        }
+    };
+
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -162,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
 
         model = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
-        if (model.btAvailable() == false) {
+        if (!model.btAvailable()) {
             // Device does not support Bluetooth
             mBluetoothStatus.setText("Status: Bluetooth not found");
             Toast.makeText(getApplicationContext(),"Bluetooth device not found!",Toast.LENGTH_SHORT).show();
@@ -176,31 +205,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
             // Spawn a new thread to keep Bluetooth active
-            new Thread() {
-                public void run() {
-                    boolean shownPreferences = false;
-                    while (true) {
-                        if(sharedPrefs.contains("bt_device")) {
-                            if (!model.isConnected()){
-                                mBluetoothHandler.removeCallbacks(mConnectBluetooth);
-                                mBluetoothHandler.post(mConnectBluetooth);
-                                SystemClock.sleep(2000);
-                            }
-                        }
-                        else {
-                            if(!shownPreferences) {
-                                shownPreferences = true;
-                                Intent intent = new Intent(MainActivity.this, PrefsActivity.class);
-                                startActivity(intent);
-
-                            }
-                        }
-                    }
-                }
-            }.start();
+            mBTConnector = new BTConnector_Thread();
+            mBTConnector.start();
 
 
         }
+
 
         // Navigation Drawer Stuff
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -245,12 +255,15 @@ public class MainActivity extends AppCompatActivity {
         mContentView = findViewById(R.id.content_frame);
 
         // Speedometer Stuff
-        TubeSpeedometer speedometer = findViewById(R.id.speedView);
-        ImageSpeedometer rpm = findViewById(R.id.rpmView);
+        ImageSpeedometer speedGauge = findViewById(R.id.speedView);
+        ImageSpeedometer rpmGauge = findViewById(R.id.rpmView);
+        ImageSpeedometer voltageGauge = findViewById(R.id.voltageView);
 
         // move to 50
-        speedometer.speedTo(135);
-        rpm.speedTo(9000);
+        speedGauge.speedTo(0);
+        rpmGauge.speedTo(0);
+        voltageGauge.speedTo(6); // Backwards 6=11
+
 
         // Updating from ViewModel
         /*model.getPairedList().observe(this, pairedList -> {
@@ -262,12 +275,26 @@ public class MainActivity extends AppCompatActivity {
         });*/
         model.getRPM().observe(this,myRPM -> {
             //Update UI
-            rpm.speedTo(myRPM,100);
+            rpmGauge.speedTo(myRPM,100);
+        });
+        model.getSpeed().observe(this,mySpeed -> {
+            //Update UI
+            speedGauge.speedTo(mySpeed,100);
+        });
+        model.getVoltage().observe(this,myVoltage -> {
+            //Update UI
+            voltageGauge.speedTo(myVoltage,100);
         });
         model.getStatus().observe(this,myStatus -> {
             //Update UI
             mBluetoothStatus.setText(myStatus.toString());
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mBTConnector.cancel();
     }
 
     @Override
@@ -295,19 +322,6 @@ public class MainActivity extends AppCompatActivity {
                 mBluetoothStatus.setText("Disabled");
         }
     }
-
-    /*final BroadcastReceiver blReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if(BluetoothDevice.ACTION_FOUND.equals(action)){
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                // add the name to the list
-                mBTArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                mBTArrayAdapter.notifyDataSetChanged();
-            }
-        }
-    };*/
 
     private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {

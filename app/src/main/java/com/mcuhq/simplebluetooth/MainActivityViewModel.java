@@ -7,37 +7,28 @@ import android.arch.lifecycle.ViewModel;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
-import android.os.Build;
 import android.os.Handler;
-import android.os.SystemClock;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+
+import EDL.AppBuffer.Bike;
 
 import static android.os.SystemClock.elapsedRealtime;
-
-import EDL.AppBuffer.*;
 
 
 public class MainActivityViewModel extends ViewModel {
     private static final long BT_TIMEOUT = 2000;
     private String TAG = MainActivityViewModel.class.getSimpleName();
-    private MutableLiveData<List<String>> pairedList;
     private BluetoothAdapter mBTAdapter;
     private BluetoothSocket mBTSocket = null; // bi-directional client-to-client data path
-    private MutableLiveData<Integer> x;
     private MutableLiveData<String> mBTStatus;
     private MutableLiveData<Integer> mRPM;
+    private MutableLiveData<Float> mSpeed;
+    private MutableLiveData<Float> mVoltage;
     private Handler mHandler; // Our main handler that will receive callback notifications
 
     private ConnectedThread mConnectedThread; // bluetooth background worker thread to send and receive data
@@ -53,17 +44,21 @@ public class MainActivityViewModel extends ViewModel {
         mBTAdapter = BluetoothAdapter.getDefaultAdapter(); // get a handle on the bluetooth radio
         mBTStatus = new MutableLiveData<>();
         mRPM = new MutableLiveData<>();
+        mSpeed = new MutableLiveData<>();
+        mVoltage = new MutableLiveData<>();
 
         mHandler = new Handler(){
             public void handleMessage(android.os.Message msg){
                 if(msg.what == MESSAGE_READ){
-                    String readMessage = null;
+                    Bike bikeObj = null;
                     try {
-                        readMessage = new String((byte[]) msg.obj, "UTF-8");
-                    } catch (UnsupportedEncodingException e) {
+                        bikeObj = (Bike) msg.obj;
+                    } catch (ClassCastException e) {
                         e.printStackTrace();
                     }
-                    mRPM.setValue(Integer.parseInt(readMessage));
+                    mRPM.setValue(bikeObj.rpm());
+                    mSpeed.setValue(bikeObj.speed());
+                    mVoltage.setValue(17-bikeObj.batteryvoltage());
                 }
 
                 if(msg.what == CONNECTING_STATUS){
@@ -76,12 +71,10 @@ public class MainActivityViewModel extends ViewModel {
         };
     }
 
-    LiveData<String> getStatus() {
-        return mBTStatus;
-    }
-    LiveData<Integer> getRPM() {
-        return mRPM;
-    }
+    LiveData<String> getStatus() { return mBTStatus; }
+    LiveData<Integer> getRPM() { return mRPM; }
+    LiveData<Float> getSpeed() { return mSpeed; }
+    LiveData<Float> getVoltage() { return mVoltage; }
 
     void connectDevice(String info) {
         if(!mBTAdapter.isEnabled()) {
@@ -169,7 +162,7 @@ public class MainActivityViewModel extends ViewModel {
         }
 
         public void run() {
-            byte[] buffer = new byte[1024];  // buffer store for the stream
+            byte[] buffer;  // buffer store for the stream
             int bytes; // bytes returned from read()
             long currentMillis, lastMillis = elapsedRealtime();
             // Keep listening to the InputStream until an exception occurs
@@ -184,14 +177,14 @@ public class MainActivityViewModel extends ViewModel {
                     if(bytes != 0) {
                         lastMillis = currentMillis;
                         buffer = new byte[1024];
-                        //SystemClock.sleep(100); //pause and wait for rest of data. Adjust this depending on your sending speed.
-                        //bytes = mmInStream.available(); // how many bytes are ready to be read?
-                        //bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
-                        //byte[] myBytes =  {buffer[bytes-3],buffer[bytes-2],buffer[bytes-1],buffer[bytes] };
-                        Integer myInt = new DataInputStream(new BufferedInputStream(mmInStream)).readInt();
-                        buffer = myInt.toString().getBytes();
-                        bytes = buffer.length;
-                        mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
+                        bytes = mmInStream.available(); // how many bytes are ready to be read?
+                        bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
+                        //Integer myInt = new DataInputStream(new BufferedInputStream(mmInStream)).readInt();
+                        //buffer = myInt.toString().getBytes();
+                        //bytes = buffer.length;
+                        java.nio.ByteBuffer bikebuf = java.nio.ByteBuffer.wrap(buffer);
+                        Bike bikeobj = Bike.getRootAsBike(bikebuf);
+                        mHandler.obtainMessage(MESSAGE_READ, bytes, -1, bikeobj)
                                 .sendToTarget(); // Send the obtained bytes to the UI activity
                     }
                 } catch (IOException e) {
@@ -219,15 +212,6 @@ public class MainActivityViewModel extends ViewModel {
     }
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
-/*
-        try {
-            final Method m = device.getClass().getMethod("createInsecureRfcommSocketToServiceRecord", UUID.class);
-            return (BluetoothSocket) m.invoke(device, BTMODULEUUID);
-        } catch (Exception e) {
-            Log.e(TAG, "Could not create Insecure RFComm Connection",e);
-        }
-*/
-
         try {
             final Method m = device.getClass().getMethod("createInsecureRfcommSocket", new Class[]{int.class});
             return (BluetoothSocket) m.invoke(device, 1);
@@ -236,8 +220,6 @@ public class MainActivityViewModel extends ViewModel {
             Log.e(TAG, "Could not create Insecure RFComm Connection", e);
         }
         return null;
-
-        //return device.createRfcommSocketToServiceRecord(BTMODULEUUID);
     }
 }
 
