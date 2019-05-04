@@ -1,12 +1,15 @@
-package com.mcuhq.simplebluetooth;
+package net.xtlive.EDL.Dashboard;
 
 import android.annotation.SuppressLint;
 import android.arch.lifecycle.ViewModelProviders;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,29 +28,40 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.LinearInterpolator;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.ListView;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
 
-import com.github.anastr.speedviewlib.DeluxeSpeedView;
 import com.github.anastr.speedviewlib.ImageSpeedometer;
-import com.github.anastr.speedviewlib.SpeedView;
-import com.github.anastr.speedviewlib.TubeSpeedometer;
+
+
 
 public class MainActivity extends AppCompatActivity {
 
     // GUI Components
     private TextView mBluetoothStatus;
+    private TextView mOilText;
+    private TextView mOdometer;
+    private TextView mTrip;
     //private Button mListPairedDevicesBtn;
     //private ListView mDevicesListView;
     private CheckBox mLED1;
+    // TODO Add blinkers
+    private ImageView mBlinkLeft;
+    private ImageView mBlinkRight;
 
     private DrawerLayout drawerLayout;
+
+    //GPS Speed
+    LocationManager locManager;
+    LocationListener li;
+    private TextView mSpeedText;
 
     private final String TAG = MainActivity.class.getSimpleName();
 
@@ -188,6 +202,8 @@ public class MainActivity extends AppCompatActivity {
         // Ask for location permission if not already allowed
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
         model = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
@@ -211,7 +227,6 @@ public class MainActivity extends AppCompatActivity {
 
         }
 
-
         // Navigation Drawer Stuff
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -227,7 +242,7 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public boolean onNavigationItemSelected(MenuItem menuItem) {
                         // set item as selected to persist highlight
-                        menuItem.setChecked(true);
+                        //menuItem.setChecked(true);
                         // close drawer when item is tapped
                         drawerLayout.closeDrawers();
 
@@ -240,6 +255,9 @@ public class MainActivity extends AppCompatActivity {
                                 break;
                             case R.id.nav_fullscreen:
                                 toggle();
+                                break;
+                            case R.id.nav_trip_reset:
+                                model.resetTrip();
                                 break;
                             default:
                                 break;
@@ -256,8 +274,20 @@ public class MainActivity extends AppCompatActivity {
 
         // Speedometer Stuff
         ImageSpeedometer speedGauge = findViewById(R.id.speedView);
+        Drawable mSpeedPicture = ContextCompat.getDrawable(this, R.drawable.speed);
+        mSpeedPicture.setColorFilter(ContextCompat.getColor(this, R.color.Indicator), PorterDuff.Mode.SRC_ATOP);
+
         ImageSpeedometer rpmGauge = findViewById(R.id.rpmView);
+        Drawable mRpmPicture = ContextCompat.getDrawable(this, R.drawable.rpm);
+        mRpmPicture.setColorFilter(ContextCompat.getColor(this, R.color.Indicator), PorterDuff.Mode.SRC_ATOP);
+
         ImageSpeedometer voltageGauge = findViewById(R.id.voltageView);
+        Drawable mVoltageImage = ContextCompat.getDrawable(this, R.drawable.voltage_gauge);
+        mVoltageImage.setColorFilter(ContextCompat.getColor(this, R.color.Indicator), PorterDuff.Mode.SRC_ATOP);
+
+        ImageSpeedometer oilTemp = findViewById(R.id.oilTemp);
+        Drawable mOilPicture = ContextCompat.getDrawable(this, R.drawable.oil_temp);
+        mOilPicture.setColorFilter(ContextCompat.getColor(this, R.color.Indicator), PorterDuff.Mode.SRC_ATOP);
 
         // move to 50
         speedGauge.speedTo(0);
@@ -285,9 +315,72 @@ public class MainActivity extends AppCompatActivity {
             //Update UI
             voltageGauge.speedTo(myVoltage,100);
         });
+
+        mOilText = findViewById(R.id.oilText);
+        model.getOilTemp().observe(this,myOilTemp -> {
+            //Update UI
+            oilTemp.speedTo(myOilTemp,100);
+            mOilText.setText(myOilTemp.toString());
+        });
+
+        mOdometer = findViewById(R.id.odometer);
+        model.getOdometer().observe(this,myOdometer -> {
+            // Update GUI
+            mOdometer.setText(myOdometer.toString());
+        });
         model.getStatus().observe(this,myStatus -> {
             //Update UI
             mBluetoothStatus.setText(myStatus.toString());
+        });
+
+        //GPS Speed
+        mSpeedText = findViewById(R.id.gpsSpeed);
+
+        locManager=(LocationManager)this.getSystemService(LOCATION_SERVICE);
+        li=new speed();
+        locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, li);
+
+        // Blinkers
+        mBlinkLeft = findViewById(R.id.leftBlinker);
+        mBlinkRight = findViewById(R.id.rightBlinker);
+        Drawable mLeftPicture = ContextCompat.getDrawable(this, R.drawable.arrow_boxed_solid_left);
+        mLeftPicture.setColorFilter(ContextCompat.getColor(this, R.color.Indicator), PorterDuff.Mode.SRC_ATOP);
+        Drawable mRightPicture = ContextCompat.getDrawable(this, R.drawable.arrow_boxed_solid_right);
+        mRightPicture.setColorFilter(ContextCompat.getColor(this, R.color.Indicator), PorterDuff.Mode.SRC_ATOP);
+
+        Animation animation = new AlphaAnimation(1, 0); //to change visibility from visible to invisible
+        animation.setDuration(300); //1 second duration for each animation cycle
+        animation.setInterpolator(new LinearInterpolator());
+        animation.setRepeatCount(Animation.INFINITE); //repeating indefinitely
+        animation.setRepeatMode(Animation.REVERSE); //animation will start from end point once ended.
+        animation.start();
+        mBlinkRight.setVisibility(View.INVISIBLE);
+        mBlinkLeft.setVisibility(View.INVISIBLE);
+
+        model.getmBlinkLeft().observe(this,myBlinkLeft -> {
+            if (myBlinkLeft) {
+                mBlinkLeft.setAnimation(animation);
+            }
+            else {
+                mBlinkLeft.clearAnimation();
+                mBlinkLeft.setVisibility(View.INVISIBLE);
+            }
+        });
+        model.getmBlinkRight().observe(this,myBlinkRight -> {
+            if (myBlinkRight) {
+                mBlinkRight.setAnimation(animation);
+            }
+            else {
+                mBlinkRight.clearAnimation();
+                mBlinkRight.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        // Trip
+        mTrip = findViewById(R.id.trip);
+        model.getmTrip().observe(this,myTrip -> {
+            // Update GUI
+            mTrip.setText(myTrip.toString());
         });
     }
 
@@ -380,5 +473,22 @@ public class MainActivity extends AppCompatActivity {
     private void delayedHide(int delayMillis) {
         mHideHandler.removeCallbacks(mHideRunnable);
         mHideHandler.postDelayed(mHideRunnable, delayMillis);
+    }
+
+    // GPS Speed copy and paste
+    class speed implements LocationListener {
+        @Override
+        public void onLocationChanged(Location loc) {
+            double thespeed=loc.getSpeed();
+            thespeed *= 2.23694;
+            mSpeedText.setText(String.valueOf((int)thespeed));
+        }
+        @Override
+        public void onProviderDisabled(String arg0) {}
+        @Override
+        public void onProviderEnabled(String arg0) {}
+        @Override
+        public void onStatusChanged(String arg0, int arg1, Bundle arg2) {}
+
     }
 }

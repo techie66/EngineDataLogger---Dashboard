@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <group android:checkableBehavior="single">
+    <group android:checkableBehavior="none">
         <item
             android:id="@+id/nav_fullscreen"
             android:icon="@drawable/ic_fullscreen_black_24dp"
@@ -9,5 +9,9 @@
             android:id="@+id/nav_settings"
             android:icon="@drawable/ic_settings_black_24dp"
             android:title="@string/settings" />
+        <item
+            android:id="@+id/nav_trip_reset"
+            android:icon="@mipmap/trip_reset_round"
+            android:title="@string/tripreset" />
     </group>
 </menu>

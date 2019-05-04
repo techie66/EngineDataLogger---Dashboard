@@ -1,0 +1,16 @@
+// IDL File for data to pass to EDL-app
+namespace EDL.AppBuffer;
+
+table Bike {
+    rpm:int;
+    speed:float;
+    odometer:uint32;
+    trip:uint32;
+    systemvoltage:float;
+    batteryvoltage:float;
+    oil_temp:float;
+    blink_left:bool;
+    blink_right:bool;
+}
+
+root_type Bike;

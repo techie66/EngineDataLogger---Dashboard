@@ -1,10 +1,13 @@
 <resources>
-    <string name="app_name">Simple Bluetooth</string>
+    <string name="app_name">EDL Dashboard</string>
     <string name="tools">Tools</string>
     <string name="slideshow">Slideshow</string>
     <string name="gallery">Gallery</string>
     <string name="fullscreen">Fullscreen</string>
     <string name="settings">Settings</string>
     <string name="units_speed">MPH</string>
+    <string name="LeftBlink">Left Blinker</string>
+    <string name="RightBlink">Right Blinker</string>
+    <string name="tripreset">Reset Trip</string>
 
 </resources>

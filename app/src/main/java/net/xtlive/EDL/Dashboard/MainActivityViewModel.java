@@ -1,4 +1,4 @@
-package com.mcuhq.simplebluetooth;
+package net.xtlive.EDL.Dashboard;
 
 import android.annotation.SuppressLint;
 import android.arch.lifecycle.LiveData;
@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 
-import EDL.AppBuffer.Bike;
+import net.xtlive.EDL.AppBuffer.Bike;
 
 import static android.os.SystemClock.elapsedRealtime;
 
@@ -29,6 +29,11 @@ public class MainActivityViewModel extends ViewModel {
     private MutableLiveData<Integer> mRPM;
     private MutableLiveData<Float> mSpeed;
     private MutableLiveData<Float> mVoltage;
+    private MutableLiveData<Float> mOilTemp;
+    private MutableLiveData<Double> modometer;
+    private MutableLiveData<Double> mTrip;
+    private MutableLiveData<Boolean> mBlinkLeft;
+    private MutableLiveData<Boolean> mBlinkRight;
     private Handler mHandler; // Our main handler that will receive callback notifications
 
     private ConnectedThread mConnectedThread; // bluetooth background worker thread to send and receive data
@@ -46,6 +51,11 @@ public class MainActivityViewModel extends ViewModel {
         mRPM = new MutableLiveData<>();
         mSpeed = new MutableLiveData<>();
         mVoltage = new MutableLiveData<>();
+        mOilTemp = new MutableLiveData<>();
+        modometer = new MutableLiveData<>();
+        mBlinkLeft = new MutableLiveData<>();
+        mBlinkRight = new MutableLiveData<>();
+        mTrip = new MutableLiveData<Double>();
 
         mHandler = new Handler(){
             public void handleMessage(android.os.Message msg){
@@ -59,6 +69,11 @@ public class MainActivityViewModel extends ViewModel {
                     mRPM.setValue(bikeObj.rpm());
                     mSpeed.setValue(bikeObj.speed());
                     mVoltage.setValue(17-bikeObj.batteryvoltage());
+                    mOilTemp.setValue(bikeObj.oilTemp());
+                    modometer.setValue(bikeObj.odometer() / 100.0);
+                    mBlinkLeft.setValue(bikeObj.blinkLeft());
+                    mBlinkRight.setValue(bikeObj.blinkRight());
+                    mTrip.setValue((bikeObj.odometer() - bikeObj.trip()) / 100.0);
                 }
 
                 if(msg.what == CONNECTING_STATUS){
@@ -75,6 +90,12 @@ public class MainActivityViewModel extends ViewModel {
     LiveData<Integer> getRPM() { return mRPM; }
     LiveData<Float> getSpeed() { return mSpeed; }
     LiveData<Float> getVoltage() { return mVoltage; }
+    LiveData<Float> getOilTemp() { return mOilTemp; }
+    LiveData<Double> getOdometer() { return modometer; }
+    LiveData<Boolean> getmBlinkRight() { return mBlinkRight; }
+    LiveData<Boolean> getmBlinkLeft() { return mBlinkLeft; }
+    LiveData<Double> getmTrip() { return mTrip; }
+
 
     void connectDevice(String info) {
         if(!mBTAdapter.isEnabled()) {
@@ -138,6 +159,11 @@ public class MainActivityViewModel extends ViewModel {
 
     public boolean isConnected() {
         return mBTSocket != null && mBTSocket.isConnected();
+    }
+
+    public void resetTrip() {
+        if(mConnectedThread != null) //First check to make sure thread created
+            mConnectedThread.write("TRPRST");
     }
 
     private class ConnectedThread extends Thread {

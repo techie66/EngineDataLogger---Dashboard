@@ -1,4 +1,4 @@
-package com.mcuhq.simplebluetooth;
+package net.xtlive.EDL.Dashboard;
 
 import org.junit.Test;
 
