@@ -11,6 +11,7 @@ table Bike {
     oil_temp:float;
     blink_left:bool;
     blink_right:bool;
+    lambda:ushort;
 }
 
 root_type Bike;

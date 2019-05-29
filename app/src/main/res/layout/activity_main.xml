@@ -78,7 +78,6 @@
             android:layout_marginLeft="8dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="&lt;Bluetooth Status>"
             android:textColor="@color/Indicator"
             app:layout_constraintStart_toEndOf="@+id/textView2"
             app:layout_constraintTop_toTopOf="@+id/textView2" />
@@ -244,7 +243,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:layout_marginBottom="8dp"
-            android:text="TextView"
+            android:text="@string/zero"
             android:textSize="18sp"
             app:layout_constraintBottom_toBottomOf="@+id/voltageView"
             app:layout_constraintEnd_toStartOf="@+id/voltageView"
@@ -255,7 +254,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
-            android:text="TextView"
+            android:text="@string/zero"
             android:textColor="@color/Indicator"
             android:textSize="30sp"
             app:layout_constraintBottom_toTopOf="@+id/voltageView"
@@ -301,7 +300,7 @@
             android:layout_marginLeft="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
-            android:text="TextView"
+            android:text="@string/zero"
             android:textColor="@color/Indicator"
             app:layout_constraintBottom_toTopOf="@+id/oilTemp"
             app:layout_constraintEnd_toEndOf="@+id/oilTemp"
@@ -313,12 +312,39 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
-            android:text="TextView"
+            android:text="@string/zero"
             android:textColor="@color/Indicator"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/speedView"
             app:layout_constraintStart_toStartOf="@+id/speedView"
             app:layout_constraintTop_toBottomOf="@+id/speedView" />
+
+        <TextView
+            android:id="@+id/lambda"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:text="@string/zero"
+            android:textColor="@color/Indicator"
+            android:textSize="30sp"
+            app:layout_constraintEnd_toStartOf="@+id/speedView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/leftBlinker" />
+
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/lambda"
+            android:textColor="@color/Indicator"
+            android:textSize="30sp"
+            app:layout_constraintBottom_toBottomOf="@+id/lambda"
+            app:layout_constraintStart_toEndOf="@+id/lambda"
+            app:layout_constraintTop_toTopOf="@+id/lambda" />
 
         <!-- Odometer -->
         <!-- Oil Temp -->

@@ -34,6 +34,7 @@ public class MainActivityViewModel extends ViewModel {
     private MutableLiveData<Double> mTrip;
     private MutableLiveData<Boolean> mBlinkLeft;
     private MutableLiveData<Boolean> mBlinkRight;
+    private MutableLiveData<Float> mLambda;
     private Handler mHandler; // Our main handler that will receive callback notifications
 
     private ConnectedThread mConnectedThread; // bluetooth background worker thread to send and receive data
@@ -55,7 +56,8 @@ public class MainActivityViewModel extends ViewModel {
         modometer = new MutableLiveData<>();
         mBlinkLeft = new MutableLiveData<>();
         mBlinkRight = new MutableLiveData<>();
-        mTrip = new MutableLiveData<Double>();
+        mTrip = new MutableLiveData<>();
+        mLambda = new MutableLiveData<>();
 
         mHandler = new Handler(){
             public void handleMessage(android.os.Message msg){
@@ -74,6 +76,7 @@ public class MainActivityViewModel extends ViewModel {
                     mBlinkLeft.setValue(bikeObj.blinkLeft());
                     mBlinkRight.setValue(bikeObj.blinkRight());
                     mTrip.setValue((bikeObj.odometer() - bikeObj.trip()) / 100.0);
+                    mLambda.setValue((float) (bikeObj.lambda()/1000.0));
                 }
 
                 if(msg.what == CONNECTING_STATUS){
@@ -95,6 +98,7 @@ public class MainActivityViewModel extends ViewModel {
     LiveData<Boolean> getmBlinkRight() { return mBlinkRight; }
     LiveData<Boolean> getmBlinkLeft() { return mBlinkLeft; }
     LiveData<Double> getmTrip() { return mTrip; }
+    LiveData<Float> getLambda() { return mLambda; }
 
 
     void connectDevice(String info) {

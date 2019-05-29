@@ -9,5 +9,6 @@
     <string name="LeftBlink">Left Blinker</string>
     <string name="RightBlink">Right Blinker</string>
     <string name="tripreset">Reset Trip</string>
-
+    <string name="lambda">&#955;</string>
+    <string name="zero">0</string>
 </resources>

@@ -49,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mOilText;
     private TextView mOdometer;
     private TextView mTrip;
+    private TextView mLambda;
     //private Button mListPairedDevicesBtn;
     //private ListView mDevicesListView;
     private CheckBox mLED1;
@@ -190,9 +191,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mBluetoothStatus = (TextView)findViewById(R.id.bluetoothStatus);
+        mBluetoothStatus = findViewById(R.id.bluetoothStatus);
 
-        mLED1 = (CheckBox)findViewById(R.id.checkboxLED1);
+        mLED1 = findViewById(R.id.checkboxLED1);
 
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
@@ -381,6 +382,13 @@ public class MainActivity extends AppCompatActivity {
         model.getmTrip().observe(this,myTrip -> {
             // Update GUI
             mTrip.setText(myTrip.toString());
+        });
+
+        // Lambda
+        mLambda = findViewById(R.id.lambda);
+        model.getLambda().observe(this,myLambda -> {
+            // Update GUI
+            mLambda.setText(myLambda.toString());
         });
     }
 

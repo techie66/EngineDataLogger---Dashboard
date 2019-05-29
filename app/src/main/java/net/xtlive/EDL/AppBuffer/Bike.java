@@ -23,6 +23,7 @@ public final class Bike extends Table {
   public float oilTemp() { int o = __offset(16); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
   public boolean blinkLeft() { int o = __offset(18); return o != 0 ? 0!=bb.get(o + bb_pos) : false; }
   public boolean blinkRight() { int o = __offset(20); return o != 0 ? 0!=bb.get(o + bb_pos) : false; }
+  public int lambda() { int o = __offset(22); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
 
   public static int createBike(FlatBufferBuilder builder,
       int rpm,
@@ -33,8 +34,9 @@ public final class Bike extends Table {
       float batteryvoltage,
       float oil_temp,
       boolean blink_left,
-      boolean blink_right) {
-    builder.startObject(9);
+      boolean blink_right,
+      int lambda) {
+    builder.startObject(10);
     Bike.addOilTemp(builder, oil_temp);
     Bike.addBatteryvoltage(builder, batteryvoltage);
     Bike.addSystemvoltage(builder, systemvoltage);
@@ -42,12 +44,13 @@ public final class Bike extends Table {
     Bike.addOdometer(builder, odometer);
     Bike.addSpeed(builder, speed);
     Bike.addRpm(builder, rpm);
+    Bike.addLambda(builder, lambda);
     Bike.addBlinkRight(builder, blink_right);
     Bike.addBlinkLeft(builder, blink_left);
     return Bike.endBike(builder);
   }
 
-  public static void startBike(FlatBufferBuilder builder) { builder.startObject(9); }
+  public static void startBike(FlatBufferBuilder builder) { builder.startObject(10); }
   public static void addRpm(FlatBufferBuilder builder, int rpm) { builder.addInt(0, rpm, 0); }
   public static void addSpeed(FlatBufferBuilder builder, float speed) { builder.addFloat(1, speed, 0.0f); }
   public static void addOdometer(FlatBufferBuilder builder, long odometer) { builder.addInt(2, (int)odometer, (int)0L); }
@@ -57,6 +60,7 @@ public final class Bike extends Table {
   public static void addOilTemp(FlatBufferBuilder builder, float oilTemp) { builder.addFloat(6, oilTemp, 0.0f); }
   public static void addBlinkLeft(FlatBufferBuilder builder, boolean blinkLeft) { builder.addBoolean(7, blinkLeft, false); }
   public static void addBlinkRight(FlatBufferBuilder builder, boolean blinkRight) { builder.addBoolean(8, blinkRight, false); }
+  public static void addLambda(FlatBufferBuilder builder, int lambda) { builder.addShort(9, (short)lambda, (short)0); }
   public static int endBike(FlatBufferBuilder builder) {
     int o = builder.endObject();
     return o;
