@@ -1,0 +1,1 @@
+EngineDataLogger-Dashboard is a companion to EngineDataLogger, a project to produce a DIY ECU. This app connects to the main ECU to provide a dashboard interface.
