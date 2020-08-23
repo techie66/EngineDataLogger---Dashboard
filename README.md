@@ -1,8 +1,12 @@
 # EngineDataLogger - Dashboard
 
-<img src="Logotype primary.png" width="60%" height="60%" />
 
 Dashboard component of Engine Data Logger system. 
+## Componenents
+- [EngineDataLogger(EDL)](https://github.com/techie66/EngineDataLogger)
+- ->[EDL - Dashboard](https://github.com/techie66/EngineDataLogger---Dashboard)
+- [EDL - Front Controls](https://github.com/techie66/EngineDataLogger-FrontControls)
+- [EDL - EngineData](https://github.com/techie66/EngineDataLogger-EngineData)
 
 ## Introduction
 
