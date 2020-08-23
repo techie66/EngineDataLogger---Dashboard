@@ -279,6 +279,16 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
                             case R.id.nav_trip_reset:
                                 model.resetTrip();
                                 break;
+                            case R.id.o2_sensor:
+                                if (menuItem.isChecked()) {
+                                    menuItem.setChecked(false);
+                                    model.toggleO2_off();
+                                }
+                                else {
+                                    menuItem.setChecked(true);
+                                    model.toggleO2_on();
+                                }
+                                break;
                             default:
                                 break;
                         }

@@ -207,6 +207,15 @@ public class MainActivityViewModel extends ViewModel {
             mConnectedThread.write("TRPRST");
     }
 
+    public void toggleO2_on() {
+        if(mConnectedThread != null) //First check to make sure thread created
+            mConnectedThread.write("O2MANON");
+    }
+
+    public void toggleO2_off() {
+        if(mConnectedThread != null) //First check to make sure thread created
+            mConnectedThread.write("O2MANOFF");
+    }
 
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;

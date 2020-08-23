@@ -368,7 +368,7 @@
             android:layout_marginRight="8dp"
             android:text="@string/zero"
             android:textColor="@color/Indicator"
-            android:textSize="30sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintEnd_toStartOf="@+id/speedView"
             app:layout_constraintTop_toBottomOf="@+id/leftBlinker" />
 
