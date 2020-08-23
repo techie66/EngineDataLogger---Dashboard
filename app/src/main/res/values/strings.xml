@@ -11,4 +11,5 @@
     <string name="tripreset">Reset Trip</string>
     <string name="lambda">&#955;</string>
     <string name="zero">0</string>
+    <string name="o2_sensor_man">O2 Sensor (Man)</string>
 </resources>
