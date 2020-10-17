@@ -82,6 +82,21 @@
             app:layout_constraintStart_toEndOf="@+id/textView2"
             app:layout_constraintTop_toTopOf="@+id/textView2" />
 
+        <TextView
+            android:id="@+id/gearIndicator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:text="@string/question"
+            android:textColor="@color/Indicator"
+            android:textSize="48sp"
+            app:layout_constraintEnd_toEndOf="@+id/rpmView"
+            app:layout_constraintStart_toStartOf="@+id/speedView"
+            app:layout_constraintTop_toTopOf="@+id/speedView" />
+
         <com.github.anastr.speedviewlib.ImageSpeedometer
             android:id="@+id/oilTemp"
             android:layout_width="0dp"
@@ -285,6 +300,20 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/toolbar"
             app:srcCompat="@drawable/arrow_boxed_solid_left" />
+
+        <ImageView
+            android:id="@+id/oilWarning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="8dp"
+            android:contentDescription="@string/OilWarn"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintEnd_toEndOf="@+id/rpmView"
+            app:layout_constraintStart_toStartOf="@+id/rpmView"
+            app:layout_constraintTop_toTopOf="@+id/rpmView"
+            app:srcCompat="@drawable/oil_warning" />
 
         <ImageView
             android:id="@+id/rightBlinker"

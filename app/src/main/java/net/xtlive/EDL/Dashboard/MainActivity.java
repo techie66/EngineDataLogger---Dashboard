@@ -50,12 +50,14 @@ public class MainActivity extends AppCompatActivity {
     private TextView mOdometer;
     private TextView mTrip;
     private TextView mLambda;
+    private TextView mGearIndicator;
     //private Button mListPairedDevicesBtn;
     //private ListView mDevicesListView;
     private CheckBox mLED1;
     // TODO Add blinkers
     private ImageView mBlinkLeft;
     private ImageView mBlinkRight;
+    private ImageView mOilWarn;
 
     private DrawerLayout drawerLayout;
 
@@ -334,6 +336,12 @@ public class MainActivity extends AppCompatActivity {
             mBluetoothStatus.setText(myStatus.toString());
         });
 
+        mGearIndicator = findViewById(R.id.gearIndicator);
+        model.getGear().observe(this,myGearIndicator -> {
+            //Update UI
+            mGearIndicator.setText(myGearIndicator.toString());
+        });
+
         //GPS Speed
         mSpeedText = findViewById(R.id.gpsSpeed);
 
@@ -374,6 +382,16 @@ public class MainActivity extends AppCompatActivity {
             else {
                 mBlinkRight.clearAnimation();
                 mBlinkRight.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        mOilWarn = findViewById(R.id.oilWarning);
+        model.getOilPres().observe(this,myOilPres -> {
+            if (myOilPres < 50) {
+                mOilWarn.setVisibility(View.VISIBLE);
+            }
+            else {
+                mOilWarn.setVisibility(View.INVISIBLE);
             }
         });
 

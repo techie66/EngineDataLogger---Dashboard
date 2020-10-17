@@ -24,6 +24,12 @@ public final class Bike extends Table {
   public boolean blinkLeft() { int o = __offset(18); return o != 0 ? 0!=bb.get(o + bb_pos) : false; }
   public boolean blinkRight() { int o = __offset(20); return o != 0 ? 0!=bb.get(o + bb_pos) : false; }
   public int lambda() { int o = __offset(22); return o != 0 ? bb.getShort(o + bb_pos) & 0xFFFF : 0; }
+  public int mapKpa() { int o = __offset(24); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public float oilPres() { int o = __offset(26); return o != 0 ? bb.getFloat(o + bb_pos) : 0.0f; }
+  public int altRpm() { int o = __offset(28); return o != 0 ? bb.getInt(o + bb_pos) : 0; }
+  public String gear() { int o = __offset(30); return o != 0 ? __string(o + bb_pos) : null; }
+  public ByteBuffer gearAsByteBuffer() { return __vector_as_bytebuffer(30, 1); }
+  public ByteBuffer gearInByteBuffer(ByteBuffer _bb) { return __vector_in_bytebuffer(_bb, 30, 1); }
 
   public static int createBike(FlatBufferBuilder builder,
       int rpm,
@@ -35,8 +41,16 @@ public final class Bike extends Table {
       float oil_temp,
       boolean blink_left,
       boolean blink_right,
-      int lambda) {
-    builder.startObject(10);
+      int lambda,
+      int map_kpa,
+      float oil_pres,
+      int alt_rpm,
+      int gearOffset) {
+    builder.startObject(14);
+    Bike.addGear(builder, gearOffset);
+    Bike.addAltRpm(builder, alt_rpm);
+    Bike.addOilPres(builder, oil_pres);
+    Bike.addMapKpa(builder, map_kpa);
     Bike.addOilTemp(builder, oil_temp);
     Bike.addBatteryvoltage(builder, batteryvoltage);
     Bike.addSystemvoltage(builder, systemvoltage);
@@ -50,7 +64,7 @@ public final class Bike extends Table {
     return Bike.endBike(builder);
   }
 
-  public static void startBike(FlatBufferBuilder builder) { builder.startObject(10); }
+  public static void startBike(FlatBufferBuilder builder) { builder.startObject(14); }
   public static void addRpm(FlatBufferBuilder builder, int rpm) { builder.addInt(0, rpm, 0); }
   public static void addSpeed(FlatBufferBuilder builder, float speed) { builder.addFloat(1, speed, 0.0f); }
   public static void addOdometer(FlatBufferBuilder builder, long odometer) { builder.addInt(2, (int)odometer, (int)0L); }
@@ -61,6 +75,10 @@ public final class Bike extends Table {
   public static void addBlinkLeft(FlatBufferBuilder builder, boolean blinkLeft) { builder.addBoolean(7, blinkLeft, false); }
   public static void addBlinkRight(FlatBufferBuilder builder, boolean blinkRight) { builder.addBoolean(8, blinkRight, false); }
   public static void addLambda(FlatBufferBuilder builder, int lambda) { builder.addShort(9, (short)lambda, (short)0); }
+  public static void addMapKpa(FlatBufferBuilder builder, int mapKpa) { builder.addInt(10, mapKpa, 0); }
+  public static void addOilPres(FlatBufferBuilder builder, float oilPres) { builder.addFloat(11, oilPres, 0.0f); }
+  public static void addAltRpm(FlatBufferBuilder builder, int altRpm) { builder.addInt(12, altRpm, 0); }
+  public static void addGear(FlatBufferBuilder builder, int gearOffset) { builder.addOffset(13, gearOffset, 0); }
   public static int endBike(FlatBufferBuilder builder) {
     int o = builder.endObject();
     return o;

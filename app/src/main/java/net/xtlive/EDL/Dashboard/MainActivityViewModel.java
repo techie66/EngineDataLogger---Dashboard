@@ -35,6 +35,8 @@ public class MainActivityViewModel extends ViewModel {
     private MutableLiveData<Boolean> mBlinkLeft;
     private MutableLiveData<Boolean> mBlinkRight;
     private MutableLiveData<Float> mLambda;
+    private MutableLiveData<String> mGear;
+    private MutableLiveData<Float> mOilPres;
     private Handler mHandler; // Our main handler that will receive callback notifications
 
     private ConnectedThread mConnectedThread; // bluetooth background worker thread to send and receive data
@@ -58,6 +60,8 @@ public class MainActivityViewModel extends ViewModel {
         mBlinkRight = new MutableLiveData<>();
         mTrip = new MutableLiveData<>();
         mLambda = new MutableLiveData<>();
+        mGear = new MutableLiveData<>();
+        mOilPres = new MutableLiveData<>();
 
         mHandler = new Handler(){
             public void handleMessage(android.os.Message msg){
@@ -77,6 +81,8 @@ public class MainActivityViewModel extends ViewModel {
                     mBlinkRight.setValue(bikeObj.blinkRight());
                     mTrip.setValue((bikeObj.odometer() - bikeObj.trip()) / 100.0);
                     mLambda.setValue((float) (bikeObj.lambda()/1000.0));
+                    mGear.setValue(bikeObj.gear());
+                    mOilPres.setValue(bikeObj.oilPres());
                 }
 
                 if(msg.what == CONNECTING_STATUS){
@@ -99,6 +105,12 @@ public class MainActivityViewModel extends ViewModel {
     LiveData<Boolean> getmBlinkLeft() { return mBlinkLeft; }
     LiveData<Double> getmTrip() { return mTrip; }
     LiveData<Float> getLambda() { return mLambda; }
+    LiveData<String> getGear() {
+        return mGear;
+    }
+    LiveData<Float> getOilPres() {
+        return mOilPres;
+    }
 
 
     void connectDevice(String info) {
@@ -169,6 +181,7 @@ public class MainActivityViewModel extends ViewModel {
         if(mConnectedThread != null) //First check to make sure thread created
             mConnectedThread.write("TRPRST");
     }
+
 
     private class ConnectedThread extends Thread {
         private final BluetoothSocket mmSocket;
