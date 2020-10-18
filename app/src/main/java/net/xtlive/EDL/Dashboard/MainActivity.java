@@ -387,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
 
         mOilWarn = findViewById(R.id.oilWarning);
         model.getOilPres().observe(this,myOilPres -> {
-            if (myOilPres < 50) {
+            if (myOilPres < 34) {
                 mOilWarn.setVisibility(View.VISIBLE);
             }
             else {
