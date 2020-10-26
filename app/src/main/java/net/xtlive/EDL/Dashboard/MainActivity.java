@@ -40,6 +40,7 @@ import android.Manifest;
 
 import com.github.anastr.speedviewlib.ImageSpeedometer;
 
+import java.util.Locale;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView mTrip;
     private TextView mLambda;
     private TextView mGearIndicator;
+    private TextView mOilPres;
     //private Button mListPairedDevicesBtn;
     //private ListView mDevicesListView;
     private CheckBox mLED1;
@@ -385,9 +387,12 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        mOilPres = findViewById(R.id.oilPres);
         mOilWarn = findViewById(R.id.oilWarning);
         model.getOilPres().observe(this,myOilPres -> {
-            if (myOilPres < 34) {
+            myOilPres -= 10;
+            mOilPres.setText(String.format(Locale.US,"%.1f",myOilPres));
+            if (myOilPres < 10) {
                 mOilWarn.setVisibility(View.VISIBLE);
             }
             else {

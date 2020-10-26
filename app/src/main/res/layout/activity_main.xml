@@ -376,6 +376,19 @@
             app:layout_constraintStart_toEndOf="@+id/lambda"
             app:layout_constraintTop_toTopOf="@+id/lambda" />
 
+        <TextView
+            android:id="@+id/oilPres"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
+            android:text="@string/zero"
+            android:textColor="@color/Indicator"
+            android:textSize="30sp"
+            app:layout_constraintEnd_toStartOf="@+id/speedView"
+            app:layout_constraintTop_toBottomOf="@+id/gearIndicator" />
+
         <!-- Odometer -->
         <!-- Oil Temp -->
         <!-- MAP Pressure -->
