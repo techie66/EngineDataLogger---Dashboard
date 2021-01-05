@@ -13,4 +13,7 @@
     <string name="lambda">&#955;</string>
     <string name="zero">0</string>
     <string name="question">?</string>
+    <string name="need_permissions">Location permissions are needed for bluetooth and GPS speed</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
 </resources>

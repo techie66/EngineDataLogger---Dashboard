@@ -1,5 +1,6 @@
 package net.xtlive.EDL.Dashboard;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
@@ -18,6 +19,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -36,14 +38,13 @@ import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.Manifest;
 
 import com.github.anastr.speedviewlib.ImageSpeedometer;
 
 import java.util.Locale;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements PermissionsDialog.PermissionsDialogListener{
 
     // GUI Components
     private TextView mBluetoothStatus;
@@ -205,11 +206,13 @@ public class MainActivity extends AppCompatActivity {
         //mDevicesListView.setOnItemClickListener(mDeviceClickListener);
 
         // Ask for location permission if not already allowed
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
+        //if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+          //  ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            DialogFragment newFragment = new PermissionsDialog();
+            newFragment.show(getSupportFragmentManager(), "permissions");
+        }
         model = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
         if (!model.btAvailable()) {
@@ -349,7 +352,8 @@ public class MainActivity extends AppCompatActivity {
 
         locManager=(LocationManager)this.getSystemService(LOCATION_SERVICE);
         li=new speed();
-        locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, li);
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+            locManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, li);
 
         // Blinkers
         mBlinkLeft = findViewById(R.id.leftBlinker);
@@ -522,4 +526,18 @@ public class MainActivity extends AppCompatActivity {
         public void onStatusChanged(String arg0, int arg1, Bundle arg2) {}
 
     }
+    // The dialog fragment receives a reference to this Activity through the
+    // Fragment.onAttach() callback, which it uses to call the following methods
+    // defined by the NoticeDialogFragment.NoticeDialogListener interface
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        // User touched the dialog's positive button
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+        // User touched the dialog's negative button
+    }
+
 }
