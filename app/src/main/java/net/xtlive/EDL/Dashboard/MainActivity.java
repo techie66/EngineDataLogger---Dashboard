@@ -422,7 +422,8 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mBTConnector.cancel();
+        if (mBTConnector != null)
+            mBTConnector.cancel();
     }
 
     @Override
