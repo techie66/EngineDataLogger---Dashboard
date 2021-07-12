@@ -1,15 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion "28.0.3"
+    compileSdkVersion 30
 
     defaultConfig {
         applicationId "net.xtlive.EDL.Dashboard"
-        minSdkVersion 15
-        targetSdkVersion 28
-        versionCode 4
-        versionName "1.3"
+        minSdkVersion 16
+        targetSdkVersion 30
+        versionCode 5
+        versionName "1.4"
     }
     buildTypes {
         release {
@@ -34,11 +33,11 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     testImplementation 'junit:junit:4.12'
-    api 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    api 'androidx.appcompat:appcompat:1.3.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
 
     // ViewModel and LiveData
-    implementation 'android.arch.lifecycle:extensions:1.1.1'
-    implementation 'com.android.support:design:28.0.0'
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation 'com.google.android.material:material:1.4.0'
     implementation 'com.github.anastr:speedviewlib:1.3.1'
 }
