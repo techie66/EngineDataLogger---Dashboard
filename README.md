@@ -2,7 +2,7 @@
 
 
 Dashboard component of Engine Data Logger system. 
-## Componenents
+## Components
 - [EngineDataLogger(EDL)](https://github.com/techie66/EngineDataLogger)
 - ->[EDL - Dashboard](https://github.com/techie66/EngineDataLogger---Dashboard)
 - [EDL - Front Controls](https://github.com/techie66/EngineDataLogger-FrontControls)
