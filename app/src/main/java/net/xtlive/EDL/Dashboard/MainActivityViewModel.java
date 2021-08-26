@@ -221,6 +221,7 @@ public class MainActivityViewModel extends ViewModel {
                         lastMillis = currentMillis;
                         buffer = new byte[1024];
                         bytes = mmInStream.available(); // how many bytes are ready to be read?
+                        bytes = Math.min(bytes, 1024);
                         bytes = mmInStream.read(buffer, 0, bytes); // record how many bytes we actually read
                         //Integer myInt = new DataInputStream(new BufferedInputStream(mmInStream)).readInt();
                         //buffer = myInt.toString().getBytes();
@@ -230,9 +231,13 @@ public class MainActivityViewModel extends ViewModel {
                         mHandler.obtainMessage(MESSAGE_READ, bytes, -1, bikeobj)
                                 .sendToTarget(); // Send the obtained bytes to the UI activity
                     }
-                } catch (IOException e) {
+                }
+                catch (IOException e) {
                     e.printStackTrace();
-
+                    break;
+                }
+                catch (ArrayIndexOutOfBoundsException e) {
+                    e.printStackTrace();
                     break;
                 }
             }
