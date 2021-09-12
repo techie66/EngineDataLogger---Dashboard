@@ -1,19 +1,35 @@
 package net.xtlive.EDL.Dashboard;
 
 import android.annotation.SuppressLint;
+
+import androidx.annotation.RequiresApi;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothSocket;
+import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanFilter;
+import android.bluetooth.le.ScanResult;
+import android.bluetooth.le.ScanSettings;
+import android.os.Build;
 import android.os.Handler;
+import android.os.ParcelUuid;
 import android.util.Log;
+import androidx.annotation.RequiresApi;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import net.xtlive.EDL.AppBuffer.Bike;
 
@@ -37,6 +53,8 @@ public class MainActivityViewModel extends ViewModel {
     private MutableLiveData<Float> mLambda;
     private MutableLiveData<String> mGear;
     private MutableLiveData<Float> mOilPres;
+    private MutableLiveData<BluetoothDevice> mBLEDevice;
+    private MutableLiveData<BluetoothGatt> mBLEGatt;
     private Handler mHandler; // Our main handler that will receive callback notifications
 
     private ConnectedThread mConnectedThread; // bluetooth background worker thread to send and receive data
@@ -51,6 +69,8 @@ public class MainActivityViewModel extends ViewModel {
         super();
         mBTAdapter = BluetoothAdapter.getDefaultAdapter(); // get a handle on the bluetooth radio
         mBTStatus = new MutableLiveData<>();
+        mBLEDevice = new MutableLiveData<>();
+        mBLEGatt = new MutableLiveData<>();
         mRPM = new MutableLiveData<>();
         mSpeed = new MutableLiveData<>();
         mVoltage = new MutableLiveData<>();
@@ -111,6 +131,8 @@ public class MainActivityViewModel extends ViewModel {
     LiveData<Float> getOilPres() {
         return mOilPres;
     }
+    LiveData<BluetoothDevice> getmBLEDevice() { return mBLEDevice;}
+    MutableLiveData<BluetoothGatt> getmBLEGatt() {return mBLEGatt;}
 
 
     void connectDevice(String info) {
@@ -171,6 +193,9 @@ public class MainActivityViewModel extends ViewModel {
 
     boolean btAvailable() {
         return mBTAdapter != null;
+    }
+    boolean btEnabled() {
+        return mBTAdapter.isEnabled();
     }
 
     public boolean isConnected() {
@@ -273,5 +298,91 @@ public class MainActivityViewModel extends ViewModel {
         }
         return null;
     }
+
+    /* BLE Stuff
+
+     */
+    private List<String> BLEEntryList = new ArrayList<String>();
+    private List<String> BLEValueList = new ArrayList<String>();
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    void BLEscan() {
+        bluetoothLeScanner = mBTAdapter.getBluetoothLeScanner();
+        scanLeDevice();
+    }
+
+    private BluetoothLeScanner bluetoothLeScanner;
+    private boolean scanning;
+    private Handler handler = new Handler();
+
+    // Stops scanning after 10 seconds.
+    private static final long SCAN_PERIOD = 10000;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private void scanLeDevice () {
+        if (!scanning) {
+            // Stops scanning after a predefined scan period.
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    scanning = false;
+                    bluetoothLeScanner.stopScan(leScanCallback);
+                }
+            }, SCAN_PERIOD);
+
+            scanning = true;
+            UUID BLP_SERVICE_UUID = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
+            UUID[] serviceUUIDs = new UUID[]{BLP_SERVICE_UUID};
+            List<ScanFilter> filters = null;
+            if(serviceUUIDs != null) {
+                filters = new ArrayList<>();
+                for (UUID serviceUUID : serviceUUIDs) {
+                    ScanFilter filter = new ScanFilter.Builder()
+                            .setServiceUuid(new ParcelUuid(serviceUUID))
+                            .build();
+                    filters.add(filter);
+                }
+            }
+            ScanSettings scanSettings = new ScanSettings.Builder()
+                    .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                    .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
+                    .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
+                    .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
+                    .setReportDelay(0L)
+                    .build();
+            bluetoothLeScanner.startScan(filters,scanSettings,leScanCallback);
+        } else {
+            scanning = false;
+            bluetoothLeScanner.stopScan(leScanCallback);
+        }
+    }
+
+    // Device scan callback.
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private ScanCallback leScanCallback =
+            new ScanCallback() {
+                @Override
+                public void onScanResult(int callbackType, ScanResult result) {
+                    super.onScanResult(callbackType, result);
+                    //result.getDevice();
+                    String EntryName = "N/A";
+                    if (result.getDevice().getName() != null) {
+                        EntryName = result.getDevice().getName();
+                    }
+                    /*if (!BLEValueList.contains(result.getDevice().getAddress())) {
+                        BLEEntryList.add(EntryName);
+                        BLEValueList.add(result.getDevice().getAddress());
+                        final CharSequence[] entries = BLEEntryList.toArray(new CharSequence[0]);
+                        KeylessList.setEntries(entries);
+                        final CharSequence[] values = BLEValueList.toArray(new CharSequence[0]);
+                        KeylessList.setEntryValues(values);
+                    }
+                    */
+                    //result.getDevice().connectGatt(,false, bluetoothGattCallback);
+
+                    scanning = false;
+                    bluetoothLeScanner.stopScan(leScanCallback);
+                    mBLEDevice.setValue(result.getDevice());
+                }
+            };
 }
 

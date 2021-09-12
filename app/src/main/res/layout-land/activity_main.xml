@@ -11,8 +11,8 @@
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="start"
         android:fitsSystemWindows="true"
         app:menu="@menu/drawer_view" />
@@ -303,16 +303,14 @@
 
         <ImageView
             android:id="@+id/oilWarning"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginEnd="44dp"
+            android:layout_marginRight="44dp"
             android:contentDescription="@string/OilWarn"
+            app:layout_constraintBottom_toBottomOf="@+id/rpmView"
             app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="@+id/rpmView"
-            app:layout_constraintStart_toStartOf="@+id/rpmView"
-            app:layout_constraintTop_toTopOf="@+id/rpmView"
             app:srcCompat="@drawable/oil_warning" />
 
         <ImageView
@@ -334,15 +332,11 @@
             android:id="@+id/lambda"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
+            android:layout_marginTop="4dp"
             android:text="@string/zero"
             android:textColor="@color/Indicator"
             android:textSize="30sp"
-            app:layout_constraintEnd_toStartOf="@+id/speedView"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/textView"
             app:layout_constraintTop_toBottomOf="@+id/oilText" />
 
         <TextView
@@ -353,8 +347,9 @@
             android:textColor="@color/Indicator"
             android:textSize="30sp"
             app:layout_constraintBottom_toBottomOf="@+id/lambda"
-            app:layout_constraintStart_toEndOf="@+id/lambda"
-            app:layout_constraintTop_toTopOf="@+id/lambda" />
+            app:layout_constraintEnd_toEndOf="@+id/oilTemp"
+            app:layout_constraintTop_toTopOf="@+id/lambda"
+            app:layout_constraintVertical_bias="1.0" />
 
         <TextView
             android:id="@+id/trip"
@@ -383,6 +378,29 @@
             android:textSize="30sp"
             app:layout_constraintBottom_toBottomOf="@+id/rpmView"
             app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageView
+            android:id="@+id/hamburgerView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/hamburger_description"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_menu" />
+
+        <ImageView
+            android:id="@+id/bleConnectedView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/toolbar"
+            app:srcCompat="@android:drawable/button_onoff_indicator_off" />
 
         <!-- Odometer -->
         <!-- Oil Temp -->

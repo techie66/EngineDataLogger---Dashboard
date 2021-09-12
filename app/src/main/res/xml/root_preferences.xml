@@ -1,0 +1,51 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:summary="Basic Settings"
+        app:title="@string/settings_header" >
+        <ListPreference
+            app:entries="@array/listOptions"
+            app:entryValues="@array/listValues"
+            app:key="bt_device"
+            app:summary="Bluetooth Device to connect to"
+            app:title="EDL Device" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/keyless_header">
+
+        <EditTextPreference
+            app:key="keyless_key"
+            app:title="@string/keyless_key_title"
+            app:useSimpleSummaryProvider="true" />
+
+        <ListPreference
+            app:entries="@array/listOptions"
+            app:entryValues="@array/listValues"
+            app:key="keyless_device"
+            app:title="@string/keyless_title"
+            app:useSimpleSummaryProvider="true" />
+
+    </PreferenceCategory>
+
+    <Preference
+        app:key="clearall"
+        app:title="Reset to Default Settings"
+        app:summary="Clear all Preferences and restore to Default Settings"/>
+<!--
+    <PreferenceCategory app:title="@string/sync_header">
+
+        <SwitchPreferenceCompat
+            app:key="sync"
+            app:title="@string/sync_title" />
+
+        <SwitchPreferenceCompat
+            app:dependency="sync"
+            app:key="attachment"
+            app:summaryOff="@string/attachment_summary_off"
+            app:summaryOn="@string/attachment_summary_on"
+            app:title="@string/attachment_title" />
+
+    </PreferenceCategory>
+    -->
+
+</PreferenceScreen>
