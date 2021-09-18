@@ -240,6 +240,10 @@ public class MainActivityViewModel extends ViewModel {
                     e.printStackTrace();
                     break;
                 }
+                catch (IndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                    break;
+                }
             }
         }
 
