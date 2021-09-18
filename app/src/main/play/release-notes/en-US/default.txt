@@ -1,0 +1,2 @@
+V1.5
+ - Fixed crash in Bluetooth/flatbuffer loop.
