@@ -4,3 +4,4 @@ V1.6
  - BLE and various permissions logic fixed
  - Menu option to reset Log File
  - Menu option to turn on O2 sensor manually
+
