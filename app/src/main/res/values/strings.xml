@@ -36,4 +36,5 @@
     <string name="keyless_key_title">Keyless Pairing Key</string>
     <string name="keyless_header">Keyless Ignition</string>
     <string name="hamburger_description">Hamburger Menu</string>
+    <string name="logreset">Start new Log File</string>
 </resources>

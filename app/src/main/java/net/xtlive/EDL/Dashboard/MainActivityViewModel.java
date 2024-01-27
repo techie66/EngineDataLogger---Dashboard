@@ -206,6 +206,10 @@ public class MainActivityViewModel extends ViewModel {
         if(mConnectedThread != null) //First check to make sure thread created
             mConnectedThread.write("TRPRST");
     }
+    public void resetLog() {
+        if(mConnectedThread != null) //First check to make sure thread created
+            mConnectedThread.write("LOGRST");
+    }
 
     public void toggleO2_on() {
         if(mConnectedThread != null) //First check to make sure thread created

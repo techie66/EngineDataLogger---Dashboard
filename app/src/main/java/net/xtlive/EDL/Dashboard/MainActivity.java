@@ -289,6 +289,9 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
                                     model.toggleO2_on();
                                 }
                                 break;
+                            case R.id.nav_log_reset:
+                                model.resetLog();
+                                break;
                             default:
                                 break;
                         }
