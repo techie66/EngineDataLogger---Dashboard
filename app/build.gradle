@@ -5,10 +5,11 @@ android {
 
     defaultConfig {
         applicationId "net.xtlive.EDL.Dashboard"
+        vectorDrawables.useSupportLibrary = true
         minSdkVersion 16
         targetSdkVersion 30
-        versionCode 6
-        versionName "1.5"
+        versionCode 7
+        versionName "1.6"
     }
     buildTypes {
         release {
@@ -32,6 +33,7 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.preference:preference:1.1.1'
     testImplementation 'junit:junit:4.12'
     api 'androidx.appcompat:appcompat:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'

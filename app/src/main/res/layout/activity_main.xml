@@ -11,10 +11,11 @@
 
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_gravity="start"
-        android:fitsSystemWindows="true"
+        android:fitsSystemWindows="false"
+        android:maxWidth="220dp"
         app:menu="@menu/drawer_view" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -33,6 +34,7 @@
             android:background="?attr/colorPrimary"
             android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -83,20 +85,62 @@
             app:layout_constraintTop_toTopOf="@+id/textView2" />
 
         <com.github.anastr.speedviewlib.ImageSpeedometer
+            android:id="@+id/rpmView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+
+            android:layout_marginStart="48dp"
+            android:layout_marginLeft="48dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+
+            android:layout_marginRight="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/speedView"
+            app:layout_constraintDimensionRatio="1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toEndOf="@+id/leftBlinker"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            app:sv_endDegree="450"
+            app:sv_image="@drawable/rpm"
+            app:sv_indicator="HalfLineIndicator"
+            app:sv_indicatorColor="@color/Indicator"
+            app:sv_indicatorWidth="4dp"
+            app:sv_maxSpeed="12000"
+            app:sv_minSpeed="0"
+            app:sv_speedTextColor="@android:color/transparent"
+            app:sv_speedTextFormat="INTEGER"
+            app:sv_speedTextPosition="CENTER"
+            app:sv_speedTextSize="48dp"
+            app:sv_startDegree="90"
+            app:sv_unit=""
+            app:sv_unitSpeedInterval="0dp"
+            app:sv_unitTextColor="@android:color/transparent"
+            app:sv_withTremble="false" />
+
+        <Space
+            android:id="@+id/space3"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toTopOf="@+id/oilTemp"
+            app:layout_constraintEnd_toStartOf="@+id/rpmView"
+            app:layout_constraintTop_toTopOf="@+id/rpmView"
+            app:layout_constraintVertical_bias="0.56"
+            app:layout_constraintVertical_weight=".25" />
+
+        <com.github.anastr.speedviewlib.ImageSpeedometer
             android:id="@+id/oilTemp"
             android:layout_width="0dp"
             android:layout_height="0dp"
 
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-
-            android:layout_marginBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="@+id/rpmView"
+            android:layout_marginStart="8dp"
+            android:layout_marginLeft="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/space4"
             app:layout_constraintDimensionRatio="1:2"
             app:layout_constraintEnd_toStartOf="@+id/rpmView"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            app:layout_constraintTop_toBottomOf="@+id/space3"
+            app:layout_constraintVertical_weight=".6"
             app:sv_endDegree="270"
             app:sv_image="@drawable/oil_temp"
             app:sv_indicator="HalfLineIndicator"
@@ -104,7 +148,7 @@
             app:sv_indicatorWidth="4dp"
             app:sv_maxSpeed="275"
             app:sv_minSpeed="125"
-            app:sv_speedTextColor="@android:color/transparent"
+            app:sv_speedTextColor="@color/Indicator"
             app:sv_speedTextFormat="FLOAT"
             app:sv_speedTextPosition="RIGHT"
             app:sv_speedTextSize="16dp"
@@ -115,21 +159,25 @@
             app:sv_unitTextColor="@android:color/transparent"
             app:sv_withTremble="false" />
 
+        <Space
+            android:id="@+id/space4"
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="@+id/rpmView"
+            app:layout_constraintEnd_toStartOf="@+id/rpmView"
+            app:layout_constraintTop_toBottomOf="@+id/oilTemp"
+            app:layout_constraintVertical_weight=".25" />
+
         <com.github.anastr.speedviewlib.ImageSpeedometer
             android:id="@+id/speedView"
             android:layout_width="0dp"
             android:layout_height="0dp"
 
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
             android:layout_marginBottom="24dp"
             app:layout_constraintBottom_toTopOf="@+id/odometer"
-            app:layout_constraintDimensionRatio="7:8"
+            app:layout_constraintDimensionRatio="1"
             app:layout_constraintEnd_toEndOf="@+id/rpmView"
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/rpmView"
             app:layout_constraintTop_toBottomOf="@+id/rpmView"
             app:sv_endDegree="390"
             app:sv_image="@drawable/speed"
@@ -138,7 +186,7 @@
             app:sv_indicatorWidth="4dp"
             app:sv_maxSpeed="160"
             app:sv_minSpeed="0"
-            app:sv_speedTextColor="@color/Indicator"
+            app:sv_speedTextColor="@android:color/transparent"
             app:sv_speedTextFormat="INTEGER"
             app:sv_speedTextPosition="CENTER"
             app:sv_speedTextSize="48dp"
@@ -148,39 +196,17 @@
             app:sv_unitTextColor="@android:color/transparent"
             app:sv_withTremble="false" />
 
-        <com.github.anastr.speedviewlib.ImageSpeedometer
-            android:id="@+id/rpmView"
+        <Space
+            android:id="@+id/space"
             android:layout_width="0dp"
-            android:layout_height="0dp"
-
+            android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            app:layout_constraintBottom_toTopOf="@+id/speedView"
-            app:layout_constraintDimensionRatio="7:8"
-            app:layout_constraintEnd_toEndOf="parent"
-
-            app:layout_constraintHorizontal_bias="1.0"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/toolbar"
-            app:sv_endDegree="450"
-            app:sv_image="@drawable/rpm"
-            app:sv_indicator="HalfLineIndicator"
-            app:sv_indicatorColor="@color/Indicator"
-            app:sv_indicatorWidth="4dp"
-            app:sv_maxSpeed="12000"
-            app:sv_minSpeed="0"
-            app:sv_speedTextColor="@color/Indicator"
-            app:sv_speedTextFormat="INTEGER"
-            app:sv_speedTextPosition="CENTER"
-            app:sv_speedTextSize="48dp"
-            app:sv_startDegree="90"
-            app:sv_unit=""
-            app:sv_unitSpeedInterval="0dp"
-            app:sv_unitTextColor="@android:color/transparent"
-            app:sv_withTremble="false" />
+            app:layout_constraintBottom_toBottomOf="@+id/voltageView"
+            app:layout_constraintEnd_toStartOf="@+id/voltageView"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintHorizontal_weight=".25"
+            app:layout_constraintStart_toStartOf="@+id/speedView" />
 
         <com.github.anastr.speedviewlib.ImageSpeedometer
             android:id="@+id/voltageView"
@@ -209,24 +235,24 @@
             app:sv_withTremble="false" />
 
         <Space
-            android:id="@+id/space"
+            android:id="@+id/space2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginRight="8dp"
             app:layout_constraintBottom_toBottomOf="@+id/voltageView"
-            app:layout_constraintEnd_toStartOf="@+id/voltageView"
+            app:layout_constraintEnd_toEndOf="@+id/speedView"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintHorizontal_weight=".25"
-            app:layout_constraintStart_toStartOf="@+id/speedView" />
+            app:layout_constraintStart_toEndOf="@+id/voltageView" />
 
         <ImageView
             android:id="@+id/oilWarning"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="48dp"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:contentDescription="@string/OilWarn"
@@ -240,8 +266,6 @@
             android:id="@+id/gearIndicator"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
@@ -249,20 +273,7 @@
             android:textColor="@color/Indicator"
             android:textSize="48sp"
             app:layout_constraintEnd_toStartOf="@+id/speedView"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/lambda" />
-
-        <Space
-            android:id="@+id/space2"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            app:layout_constraintBottom_toBottomOf="@+id/voltageView"
-            app:layout_constraintEnd_toEndOf="@+id/speedView"
-            app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintHorizontal_weight=".25"
-            app:layout_constraintStart_toEndOf="@+id/voltageView" />
 
         <TextView
             android:id="@+id/trip"
@@ -290,7 +301,8 @@
             app:layout_constraintBottom_toTopOf="@+id/voltageView"
             app:layout_constraintEnd_toEndOf="@+id/speedView"
             app:layout_constraintStart_toStartOf="@+id/speedView"
-            app:layout_constraintTop_toTopOf="@+id/speedView" />
+            app:layout_constraintTop_toTopOf="@+id/speedView"
+            tools:visibility="invisible" />
 
         <ImageView
             android:id="@+id/leftBlinker"
@@ -324,17 +336,16 @@
 
         <TextView
             android:id="@+id/oilText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:text="@string/zero"
             android:textColor="@color/Indicator"
-            app:layout_constraintBottom_toTopOf="@+id/oilTemp"
+            app:layout_constraintBottom_toBottomOf="@+id/oilTemp"
             app:layout_constraintEnd_toEndOf="@+id/oilTemp"
-            app:layout_constraintStart_toStartOf="@+id/oilTemp" />
+            app:layout_constraintTop_toTopOf="@+id/oilTemp"
+            tools:visibility="invisible" />
 
         <TextView
             android:id="@+id/odometer"
@@ -342,10 +353,8 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
-            android:layout_marginBottom="8dp"
             android:text="@string/zero"
             android:textColor="@color/Indicator"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@+id/speedView"
             app:layout_constraintStart_toStartOf="@+id/speedView"
             app:layout_constraintTop_toBottomOf="@+id/speedView" />
@@ -354,16 +363,13 @@
             android:id="@+id/lambda"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginLeft="8dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:text="@string/zero"
             android:textColor="@color/Indicator"
-            android:textSize="30sp"
+            app:autoSizeTextType="uniform"
             app:layout_constraintEnd_toStartOf="@+id/speedView"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/leftBlinker" />
 
         <TextView
@@ -389,6 +395,29 @@
             android:textSize="30sp"
             app:layout_constraintEnd_toStartOf="@+id/speedView"
             app:layout_constraintTop_toBottomOf="@+id/gearIndicator" />
+
+        <ImageView
+            android:id="@+id/bleConnectedView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginRight="16dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/toolbar"
+            app:srcCompat="@android:drawable/button_onoff_indicator_off" />
+
+        <ImageView
+            android:id="@+id/hamburgerView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginTop="16dp"
+            android:contentDescription="@string/hamburger_description"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/ic_menu" />
 
         <!-- Odometer -->
         <!-- Oil Temp -->

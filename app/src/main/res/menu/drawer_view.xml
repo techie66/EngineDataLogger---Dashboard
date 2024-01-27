@@ -10,8 +10,17 @@
             android:icon="@drawable/ic_settings_black_24dp"
             android:title="@string/settings" />
         <item
+            android:id="@+id/nav_log_reset"
+            android:icon="@mipmap/trip_reset_round"
+            android:title="@string/logreset" />
+        <item
             android:id="@+id/nav_trip_reset"
             android:icon="@mipmap/trip_reset_round"
             android:title="@string/tripreset" />
+    </group>
+    <group android:checkableBehavior="all" >
+        <item
+            android:id="@+id/o2_sensor"
+            android:title="@string/o2_sensor_man" />
     </group>
 </menu>

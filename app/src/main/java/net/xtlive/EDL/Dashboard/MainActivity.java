@@ -2,7 +2,14 @@ package net.xtlive.EDL.Dashboard;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+
+import androidx.core.content.res.ResourcesCompat;
 import androidx.lifecycle.ViewModelProviders;
+
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -26,6 +33,9 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -54,13 +64,12 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
     private TextView mLambda;
     private TextView mGearIndicator;
     private TextView mOilPres;
-    //private Button mListPairedDevicesBtn;
-    //private ListView mDevicesListView;
-    private CheckBox mLED1;
     // TODO Add blinkers
     private ImageView mBlinkLeft;
     private ImageView mBlinkRight;
     private ImageView mOilWarn;
+    private ImageView mBLEConnected;
+    private ImageView mHamburger;
 
     private DrawerLayout drawerLayout;
 
@@ -77,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
 
     // #defines for identifying shared types between calling functions
     private final static int REQUEST_ENABLE_BT = 1; // used to identify adding bluetooth names
+    private final static int REQUEST_LOCATION_FINE = 2;
 
     /**
      * Whether or not the system UI should be auto-hidden after
@@ -161,27 +171,39 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
             model.connectDevice(sharedPrefs.getString("bt_device",""));
         }
     };
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private final Runnable mConnectKeyless = new Runnable() {
+        @Override
+        public void run() {
+            //model.connectKeyless(sharedPrefs.getString("keyless_device",""));
+            model.getmBLEDevice().getValue().connectGatt(getApplicationContext(),false, bluetoothGattCallback);
+        }
+    };
 
     private final class BTConnector_Thread extends Thread {
         private boolean running = true;
         private boolean shownPreferences = false;
         @Override
         public void run() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                // TODO only if enabled in settings
+                // TODO move to loop, check for existing connection
+                model.BLEscan();
+            }
             while (running) {
                 if (sharedPrefs.contains("bt_device")) {
                     if (!model.isConnected()) {
                         mBluetoothHandler.removeCallbacks(mConnectBluetooth);
                         mBluetoothHandler.post(mConnectBluetooth);
-                        SystemClock.sleep(2000);
                     }
                 } else {
                     if (!shownPreferences) {
                         shownPreferences = true;
                         Intent intent = new Intent(MainActivity.this, PrefsActivity.class);
                         startActivity(intent);
-
                     }
                 }
+                SystemClock.sleep(2000);
             }
         }
 
@@ -190,15 +212,12 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
         }
     };
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         mBluetoothStatus = findViewById(R.id.bluetoothStatus);
-
-        mLED1 = findViewById(R.id.checkboxLED1);
 
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
 
@@ -209,10 +228,7 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
 
         //if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
           //  ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            DialogFragment newFragment = new PermissionsDialog();
-            newFragment.show(getSupportFragmentManager(), "permissions");
-        }
+
         model = ViewModelProviders.of(this).get(MainActivityViewModel.class);
 
         if (!model.btAvailable()) {
@@ -221,17 +237,13 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
             Toast.makeText(getApplicationContext(),"Bluetooth device not found!",Toast.LENGTH_SHORT).show();
         }
         else {
-
-            mLED1.setOnClickListener(new View.OnClickListener(){
-                @Override
-                public void onClick(View v){
-                    model.sendByte("1");
-                }
-            });
-            // Spawn a new thread to keep Bluetooth active
-            mBTConnector = new BTConnector_Thread();
-            mBTConnector.start();
-
+            if (!model.btEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            }
+            else {
+                checkBTPermission();
+            }
 
         }
 
@@ -267,10 +279,22 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
                             case R.id.nav_trip_reset:
                                 model.resetTrip();
                                 break;
+                            case R.id.o2_sensor:
+                                if (menuItem.isChecked()) {
+                                    menuItem.setChecked(false);
+                                    model.toggleO2_off();
+                                }
+                                else {
+                                    menuItem.setChecked(true);
+                                    model.toggleO2_on();
+                                }
+                                break;
+                            case R.id.nav_log_reset:
+                                model.resetLog();
+                                break;
                             default:
                                 break;
                         }
-
                         return true;
                     }
                 });
@@ -279,7 +303,16 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
         mVisible = true;
         mControlsView = findViewById(R.id.toolbar);
         mContentView = findViewById(R.id.content_frame);
+        mHamburger = findViewById(R.id.hamburgerView);
+        mHamburger.setClickable(true);
+        mHamburger.setOnClickListener(new View.OnClickListener() {
 
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                drawerLayout.openDrawer(Gravity.LEFT);
+            }
+        });
         // Speedometer Stuff
         ImageSpeedometer speedGauge = findViewById(R.id.speedView);
         Drawable mSpeedPicture = ContextCompat.getDrawable(this, R.drawable.speed);
@@ -304,13 +337,6 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
 
 
         // Updating from ViewModel
-        /*model.getPairedList().observe(this, pairedList -> {
-            // update UI
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_list_item_1, android.R.id.text1, pairedList);
-            // Assign adapter to ListView
-            mDevicesListView.setAdapter(adapter);
-        });*/
         model.getRPM().observe(this,myRPM -> {
             //Update UI
             rpmGauge.speedTo(myRPM,100);
@@ -417,6 +443,35 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
             // Update GUI
             mLambda.setText(myLambda.toString());
         });
+
+        // Keyless Ignition (BLE)
+        mBLEConnected = findViewById(R.id.bleConnectedView);
+        mBLEConnected.setVisibility(View.INVISIBLE);
+        model.getmBLEDevice().observe(this,myKeyless -> {
+            //myKeyless.connectGatt(this,false, bluetoothGattCallback);
+            //mBluetoothHandler
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                mBLEConnected.setImageDrawable( ResourcesCompat.getDrawable(getResources() ,android.R.drawable.button_onoff_indicator_off,getTheme()));
+                mBLEConnected.setVisibility(View.VISIBLE);
+                mBluetoothHandler.removeCallbacks(mConnectKeyless);
+                mBluetoothHandler.post(mConnectKeyless);
+            }
+        });
+
+    }
+
+    private void checkBTPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            DialogFragment newFragment = new PermissionsDialog();
+            newFragment.show(getSupportFragmentManager(), "permissions");
+        } else {
+            startBTConnector();
+        }
+    }
+
+    private void startBTConnector() {
+        mBTConnector = new BTConnector_Thread();
+        mBTConnector.start();
     }
 
     @Override
@@ -438,16 +493,15 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
 
     // Enter here after user selects "yes" or "no" to enabling radio
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent Data){
+    protected void onActivityResult(int requestCode, int resultCode, Intent Data) {
         // Check which request we're responding to
+        super.onActivityResult(requestCode, resultCode, Data);
         if (requestCode == REQUEST_ENABLE_BT) {
             // Make sure the request was successful
             if (resultCode == RESULT_OK) {
-                // The user picked a contact.
-                // The Intent's data Uri identifies which contact was selected.
                 mBluetoothStatus.setText("Enabled");
-            }
-            else
+                checkBTPermission();
+            } else
                 mBluetoothStatus.setText("Disabled");
         }
     }
@@ -533,12 +587,49 @@ public class MainActivity extends AppCompatActivity implements PermissionsDialog
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
         // User touched the dialog's positive button
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_FINE);
     }
 
     @Override
     public void onDialogNegativeClick(DialogFragment dialog) {
         // User touched the dialog's negative button
     }
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                                           int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case REQUEST_LOCATION_FINE:
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // Permission is granted.
+                    startBTConnector();
+                } else {
+                    // TODO
+                    // Explain to the user that the feature is unavailable because
+                    // the features requires a permission that the user has denied.
+                    // At the same time, respect the user's decision. Don't link to
+                    // system settings in an effort to convince the user to change
+                    // their decision.
+                }
+                return;
+        }
+        // Other 'case' lines to check for other
+        // permissions this app might request.
+    }
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                // successfully connected to the GATT Server
+                Log.w(TAG,"Connected Keyless");
+                mBLEConnected.setImageDrawable( ResourcesCompat.getDrawable(getResources() ,android.R.drawable.button_onoff_indicator_on,getTheme()));
+                model.getmBLEGatt().postValue(gatt);
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                // disconnected from the GATT Server
+            }
+        }
+    };
 }
